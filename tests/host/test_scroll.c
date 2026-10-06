@@ -12,13 +12,13 @@ static uint8_t fbA[480][320], fbB[TH][320]; static int SW, SHH;
 static void ffA(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t c){(void)s;for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++)fbA[j][i]=(uint8_t)c;}
 static void ffB(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t c){(void)s;for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++)fbB[j][i]=(uint8_t)c;}
 static const qg_backend_t ta={.name="A",.fill_rect=ffA}, tbk={.name="B",.fill_rect=ffB};
-void demo_setup(const char*t){(void)t;}
+void test_setup(const char*t,const char*a){(void)t;(void)a;}
 void sleep_ms(uint32_t m){(void)m;} uint64_t time_us_64(void){return 0;}
 void qg_screen_set_line_width(qg_screen_t *s, uint8_t w){ s->line_width = w<1?1:w; }
 void qg_screen_set_colors(qg_screen_t *s, qg_color_t fg, qg_color_t bg){ if(fg<=254)s->fg_color=fg; if(bg<=254)s->bg_color=bg; }
 #define printf(...) ((void)0)
 #define main demo_main
-#include "../hardware/m5_demo.c"
+#include "../hardware/test_m5.c"
 #undef main
 #undef printf
 static void mk(qg_screen_t*s,int w,int h,const qg_backend_t*b){ memset(s,0,sizeof *s); s->width=w;s->height=h; qg_view_reset(s); { static qg_text_line_t qg_hist_pool[4][QG_TEXT_HISTORY_LINES]; static const void *qg_hist_owner[4]; int k_ = 0; while (k_ < 3 && qg_hist_owner[k_] && qg_hist_owner[k_] != (const void *)(s)) k_++; qg_hist_owner[k_] = (s); (s)->hist = qg_hist_pool[k_]; (s)->hist_cap = QG_TEXT_HISTORY_LINES; }s->ready=true;s->backend=b;s->fg_color=QG_WHITE;s->bg_color=QG_BLACK;s->line_width=1;s->text_bg=QG_TRANSPARENT; s->tab_width=40; s->wrap=true; s->scroll=true; qg_palette_copy_standard(s->palette);

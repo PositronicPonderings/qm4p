@@ -27,16 +27,16 @@ void qg_screen_flush(qg_screen_t *s){ if(s->backend->flush) s->backend->flush(s)
 void qg_screen_flush_all(qg_screen_t *s){ if(!s->fb) return; qg_int_dirty_all(s); s->backend->flush(s); }
 static void mk(qg_screen_t*s,int w,int h,uint8_t*fb){ memset(s,0,sizeof *s); s->width=w;s->height=h; qg_view_reset(s); { static qg_text_line_t qg_hist_pool[4][QG_TEXT_HISTORY_LINES]; static const void *qg_hist_owner[4]; int k_ = 0; while (k_ < 3 && qg_hist_owner[k_] && qg_hist_owner[k_] != (const void *)(s)) k_++; qg_hist_owner[k_] = (s); (s)->hist = qg_hist_pool[k_]; (s)->hist_cap = QG_TEXT_HISTORY_LINES; }s->ready=true;s->fg_color=QG_WHITE;s->bg_color=QG_BLACK;s->line_width=1;s->text_bg=QG_TRANSPARENT;s->tab_width=40;s->wrap=true;s->scroll=true; qg_palette_copy_standard(s->palette);
   if(fb){s->fb=fb;s->backend=&qg_backend_buf8;} else s->backend=&dback; }
-void demo_setup_ex(const char*t,uint8_t*fb,uint32_t n){(void)t;(void)n; mk(&scr_a,240,320,NULL); mk(&scr_b,320,480,fb);}
+void test_setup_ex(const char*t,const char*a,uint8_t*fb,uint32_t n){(void)t;(void)a;(void)n; mk(&scr_a,240,320,NULL); mk(&scr_b,320,480,fb);}
 #define printf(...) ((void)0)
 #define main demo_main
-#include "../hardware/m8_demo.c"
+#include "../hardware/test_m8.c"
 #undef main
 #undef printf
 static void dump(const char*n,int pl){ FILE*f=fopen(n,"wb"); int w=pl?320:240,h=pl?480:320; fprintf(f,"P6 %d %d 255\n",w,h);
  for(int y=0;y<h;y++)for(int x=0;x<w;x++){ uint16_t p=pl?ppanel[y][x]:dpanel[y][x]; uint8_t c[3]={(uint8_t)(((p>>11)&31)<<3),(uint8_t)(((p>>5)&63)<<2),(uint8_t)((p&31)<<3)}; fwrite(c,1,3,f);} fclose(f);}
 static uint8_t ref_fb[320*480];
-int main(void){ demo_setup_ex("",fb_b,sizeof fb_b);
+int main(void){ test_setup_ex("","",fb_b,sizeof fb_b);
  qg_image_open(&d20,img_d20,img_d20_size,QG_IMAGE_TRANSPARENT);
  qg_screen_t *s=&scr_b; sprite_t sp[N_DICE]; qg_screen_t ref; mk(&ref,320,480,ref_fb);
  qg_box(s,0,30,319,479,QG_TRANSPARENT,QG_BLUE); sprites_init(sp,N_DICE,s); qg_screen_flush_all(s);

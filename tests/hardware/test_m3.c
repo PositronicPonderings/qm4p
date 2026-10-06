@@ -3,34 +3,44 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m3_demo.c
- * @brief   Milestone 3 test: relative (percentage) coordinates, and the
+ * @file    test_m3.c
+ * @brief   Hardware test M3: relative (percentage) coordinates, and the
  *          faster arcs.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m3.uf2).
+ * WHAT IT CHECKS
+ *   That a layout written only in percentages (the _pct functions) fits
+ *   itself to every screen size and orientation, that 0% and 100% land
+ *   exactly on the first and last pixels, and how fast arcs draw: a timed
+ *   gauge, and a spinning dial animated on unbuffered screens by repainting
+ *   only what changed.
  *
- * PAGES
- *   1  Layout     A mock dice-roller screen drawn ONLY with _pct calls, on
- *                 both screens, upright and then turned 90 degrees. The same
- *                 code fits itself to every screen size and orientation.
- *   2  Gauge      The M2 gauge, timed with no pauses. Compare the "per slice"
- *                 figure with M2's (roughly 12 ms on screen A).
- *   3  Dial       A lock-style dial: a marker spins around a ring for a few
- *                 seconds on both screens, reporting frames per second.
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h, both DIRECT. A
+ *   USB serial terminal shows the steps and the timings.
+ *
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   1  Layout   a mock dice-roller screen drawn only with _pct calls, the
+ *               same on both screens, upright for 4 s and then turned 90
+ *               degrees for 4 s. The yellow meter stays round around the
+ *               die; white corner ticks touch each corner exactly.
+ *   2  Gauge    M2's gauge, drawn with no pauses. Serial gives the time per
+ *               10-degree slice: compare it with M2's, roughly 12 ms on A.
+ *   3  Dial     a lock-style dial whose yellow marker spins clockwise,
+ *               smoothly, on both screens for 4 s; serial gives the frames
+ *               per second.
+ *
+ * Program: qg4p_test_m3 (build/tests/hardware/qg4p_test_m3.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
+#define TEST_TAG "M3"
+#include "test_log.h"
 
 static qg_screen_t *const screens[2] = { &scr_a, &scr_b };
 static const char   *const names[2]   = { "A", "B" };
 
-static void print_ms(const char *label, uint64_t us)
-{
-    printf("  %-6s %lu.%lu ms\n", label,
-           (unsigned long)(us / 1000), (unsigned long)((us % 1000) / 100));
-}
 
 /* ========================================================================== */
 /*  Page 1: a layout in percentages                                           */
@@ -86,18 +96,19 @@ static void draw_layout(qg_screen_t *s)
 
 static void page_layout(void)
 {
-    printf("\n--- Page 1: layout in percentages ---\n");
-    printf("  Look for: the same layout on both screens, upright and then\n"
-           "  turned 90 degrees; corner ticks touching each corner exactly.\n");
+    TEST_STEP(1, 3, "Layout", "percent layout, upright, then sideways", "ticks touching each corner");
 
     for (int rot = 0; rot <= 1; rot++) {
-        printf("  rotation %d:\n", rot ? 90 : 0);
+        uint64_t us[2];
         for (int i = 0; i < 2; i++) {
             qg_screen_set_rotation(screens[i], rot ? QG_ROT_90 : QG_ROT_0);
             uint64_t t0 = time_us_64();
             draw_layout(screens[i]);
-            print_ms(names[i], time_us_64() - t0);
+            us[i] = time_us_64() - t0;
         }
+        TEST_DETAIL("rotation %2d: drawn in A %lu.%lu ms, B %lu.%lu ms", rot ? 90 : 0,
+                    (unsigned long)(us[0] / 1000), (unsigned long)((us[0] % 1000) / 100),
+                    (unsigned long)(us[1] / 1000), (unsigned long)((us[1] % 1000) / 100));
         sleep_ms(4000);
     }
     for (int i = 0; i < 2; i++) {
@@ -110,8 +121,7 @@ static void page_layout(void)
 /* ========================================================================== */
 static void page_gauge(void)
 {
-    printf("\n--- Page 2: gauge benchmark (no pauses) ---\n");
-    printf("  M2 took roughly 12 ms per slice on screen A.\n");
+    TEST_STEP(2, 3, "Gauge", "M2's gauge, no pauses", "the time per slice (M2: ~12 ms on A)");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_t *s = screens[i];
@@ -132,7 +142,7 @@ static void page_gauge(void)
         }
         uint64_t us = time_us_64() - t0;
 
-        printf("  %-6s %d slices in %lu.%lu ms -> %lu us per slice\n", names[i],
+        TEST_DETAIL("%s: %d slices in %lu.%lu ms -> %lu us per slice", names[i],
                slices, (unsigned long)(us / 1000), (unsigned long)((us % 1000) / 100),
                (unsigned long)(us / (uint64_t)slices));
     }
@@ -164,8 +174,7 @@ static void page_gauge(void)
 
 static void page_dial(void)
 {
-    printf("\n--- Page 3: spinning dial (%d s) ---\n", DIAL_SECONDS);
-    printf("  Look for: a smooth marker spinning clockwise on both screens.\n");
+    TEST_STEP(3, 3, "Dial", "a marker spinning for 4 s", "a smooth clockwise spin on both");
 
     int16_t cx[2], cy[2], r[2];
     for (int i = 0; i < 2; i++) {
@@ -215,7 +224,7 @@ static void page_dial(void)
     uint64_t us = time_us_64() - t0;
 
     unsigned long fps10 = (unsigned long)((uint64_t)frames * 10000000u / us);
-    printf("  %d frames (both screens each frame) -> %lu.%lu frames per second\n",
+    TEST_DETAIL("%d frames (both screens each frame) -> %lu.%lu frames per second",
            frames, fps10 / 10, fps10 % 10);
 
     for (int i = 0; i < 2; i++) {
@@ -227,11 +236,13 @@ static void page_dial(void)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 3");
+    test_setup(TEST_TAG, "qg4p_test_m3: layouts in percentages, arc speed, a spinning dial");
 
-    while (true) {
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
         page_layout();
         page_gauge();
         page_dial();
+        TEST_PASS_DONE();
     }
 }

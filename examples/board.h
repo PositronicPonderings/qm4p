@@ -52,6 +52,35 @@
 /* For the 2.8" ILI9341 instead: QG_DRIVER_ILI9341, 240 x 320,
  * invert false, bgr true, mirror_x true (the same flags, as it happens). */
 
+/* --- Two-screen layout (the showcase and any future two-screen demos) ---
+ * A program that treats the two screens as one wide picture needs to know
+ * where they sit:
+ *
+ *     [ left screen ][ gap ][ right screen ]
+ *
+ * BOARD_LEFT_SCREEN  Which screen is on your LEFT as you look at them:
+ *                    BOARD_SCREEN_A or BOARD_SCREEN_B. The showcase starts
+ *                    by writing LEFT and RIGHT in big letters on the two
+ *                    screens; if they're the wrong way round, change this.
+ * BOARD_GAP_PX       How far apart the screens' pictures are, in pixels, so
+ *                    a ball crossing from one to the other spends about as
+ *                    long in the gap as it would on real glass. To measure
+ *                    it: with a ruler, find the distance from the last lit
+ *                    pixel of the left screen to the first lit pixel of the
+ *                    right one, in mm. Divide by the size of ONE pixel of
+ *                    the left screen: its lit width in mm divided by its
+ *                    width in pixels (the 2.0" ST7789 is about 30.6 mm
+ *                    across 240 pixels: 0.13 mm a pixel). So a 5 mm gap is
+ *                    5 / 0.13 = about 40 pixels. Near enough is fine.
+ *                    (The two screens' pixels aren't the same size, so the
+ *                    wide picture is only roughly to scale either way.)   */
+#define BOARD_SCREEN_A      0
+#define BOARD_SCREEN_B      1
+#define BOARD_LEFT_SCREEN   BOARD_SCREEN_A  /* which screen sits on the LEFT        */
+#define BOARD_GAP_PX        40              /* gap between the screens, in pixels:  */
+                                            /* roughly the physical gap measured    */
+                                            /* in the left screen's pixel size      */
+
 /* --- Colour adjustment, per screen ---
  * { red, green, blue gains in percent }, { red, green, blue gammas x 100 }.
  * All 100s = no adjustment. Find your panel's numbers with qg4p_calibrate,

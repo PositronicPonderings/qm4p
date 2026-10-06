@@ -14,13 +14,13 @@ static void ff(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t 
 static void wr(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,const uint16_t*px){ sends[s==&scr_a?0:1]++; if(x<0||y<0||x+w>s->width||y+h>s->height) oob++;
   for(int j=0;j<h;j++)for(int i=0;i<w;i++)put(s,x+i,y+j,px[j*w+i]);}
 static const qg_backend_t tb={.name="T",.fill_rect=ff,.write_rgb565=wr};
-void demo_setup(const char*t){(void)t;}
+void test_setup(const char*t,const char*a){(void)t;(void)a;}
 static uint64_t ft; void sleep_ms(uint32_t m){(void)m;} uint64_t time_us_64(void){return ft+=10;}
 void qg_screen_set_line_width(qg_screen_t *s, uint8_t w){ s->line_width = w<1?1:w; }
 void qg_screen_set_colors(qg_screen_t *s, qg_color_t fg, qg_color_t bg){ if(fg<=254)s->fg_color=fg; if(bg<=254)s->bg_color=bg; }
 #define printf(...) ((void)0)
 #define main demo_main
-#include "../hardware/m4_demo.c"
+#include "../hardware/test_m4.c"
 #undef main
 #undef printf
 static void mk(qg_screen_t*s,int w,int h){ s->width=w;s->height=h; qg_view_reset(s); { static qg_text_line_t qg_hist_pool[4][QG_TEXT_HISTORY_LINES]; static const void *qg_hist_owner[4]; int k_ = 0; while (k_ < 3 && qg_hist_owner[k_] && qg_hist_owner[k_] != (const void *)(s)) k_++; qg_hist_owner[k_] = (s); (s)->hist = qg_hist_pool[k_]; (s)->hist_cap = QG_TEXT_HISTORY_LINES; }s->ready=true;s->backend=&tb;s->fg_color=QG_WHITE;s->bg_color=QG_BLACK;s->line_width=1;s->text_bg=QG_TRANSPARENT; qg_palette_copy_standard(s->palette);}

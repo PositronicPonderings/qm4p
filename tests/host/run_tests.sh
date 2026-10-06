@@ -35,30 +35,33 @@ check() {   # check <name> <command...>   (run inside build/)
 echo "Building..."
 build test_text_units   test_text_units.c $L/qg_draw.c $L/qg_draw_pct.c $L/qg_palette.c
 build test_line_widths  test_line_widths.c $L/qg_draw.c
+build test_text_edges   test_text_edges.c $BASE
 build test_scroll       test_scroll.c $BASE
 build imgtest           imgtest.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c
-build test_assets       test_assets.c $A/qa4p.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c $H/demo_images.c
+build test_assets       test_assets.c $A/qa4p.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c $H/test_images.c
 build test_buf8_a       test_buf8_a.c $BASE $BUF8
-build test_buf8_b       test_buf8_b.c $BASE $BUF8 $H/demo_images.c
-build test_buf8_overlap test_buf8_overlap.c $BASE $BUF8 $H/demo_images.c
-build test_new_commands test_new_commands.c $BASE $BUF8 $H/demo_images.c
+build test_buf8_b       test_buf8_b.c $BASE $BUF8 $H/test_images.c
+build test_buf8_overlap test_buf8_overlap.c $BASE $BUF8 $H/test_images.c
+build test_new_commands test_new_commands.c $BASE $BUF8 $H/test_images.c
 build render_m2         render_m2.c screenstub.c $BASE
 build render_m3         render_m3.c $BASE
 build render_m4         render_m4.c $BASE
 build render_m5         render_m5.c $BASE
-build render_m6         render_m6.c $BASE $H/demo_images.c
+build render_m6         render_m6.c $BASE $H/test_images.c
 build render_m7         render_m7.c $BASE $A/qa4p.c
-build render_m8         render_m8.c $BASE $BUF8 $H/demo_images.c
-build render_new        render_new.c $BASE $BUF8 $H/demo_images.c
+build render_m8         render_m8.c $BASE $BUF8 $H/test_images.c
+build render_new        render_new.c $BASE $BUF8 $H/test_images.c
 
 # The examples run unchanged against stand-in screens (render_example.c),
 # each stopped at a representative moment. STOP = calls to sleep_ms().
+# The showcase is stopped at several moments, listed in showcase_stills.txt
+# (the README's pictures; see tools/make_readme_images.py).
 EX="hello:1 shapes:1 text:25 layout:1 images:1 two_screens:40 asset_pack:1 animation_direct:70 framebuffer:70 palette_effects:40 paint:14 sprites:60 dashboard:160 dice_roller:150 colour_check:1 calibrate:1"
 E=../../examples
 EXCF="-std=c11 -O1 -w -Istubs_examples -Istubs -I$L -I$A -I$E -DQA_HOST_TEST"
 EXLIB="$BASE $BUF8 $A/qa4p.c $E/example_art.c"
 mkdir -p $B/ex
-for ex in $EX; do
+for ex in $EX showcase:0; do
     n=${ex%%:*}
     gcc $EXCF -Dmain=example_main -c $E/$n.c -o $B/ex/$n.o 2> $B/ex/$n.build.log &&
     gcc $EXCF -o $B/ex/r_$n render_example.c $B/ex/$n.o $EXLIB -lm 2>> $B/ex/$n.build.log ||
@@ -77,6 +80,7 @@ cp test_images.py test_images_delta.py $B/
 echo "Running..."
 check text_units        ./test_text_units
 check line_widths       ./test_line_widths
+check text_edges        ./test_text_edges
 check scroll_exact      ./test_scroll
 check images_vs_pillow  sh -c 'python3 test_images.py < cases.txt'
 check images_rle_delta  python3 test_images_delta.py
@@ -90,12 +94,23 @@ check buf8_scroll_image ./test_buf8_b
 check buf8_overlap      ./test_buf8_overlap
 check new_commands      ./test_new_commands
 check render_pages      sh -c 'rm -f *.ppm; for r in render_m2 render_m3 render_m4 render_m5 render_m6 render_m7 render_m8 render_new; do ./$r || exit 1; done'
-check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted'
+check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted &&
+                               while read n stop rest; do case $n in ""|"#"*) continue ;; esac; ./r_showcase $stop showcase_$n > showcase_$n.log || exit 1; done < ../../showcase_stills.txt'
 check golden_images     sh -c 'sha256sum -c ../golden.sha256 --quiet'
+# A finished picture can be right while the program keeps redrawing it, which
+# flickers on a real DIRECT screen. The showcase's dice settle at sleep 746
+# and their scene ends at 811; the closing card runs 812-961 (sleep numbers
+# as in showcase_stills.txt). While they sit still, exactly two frames may
+# draw: the dice total (764) and the closing card's first frame (812).
+check showcase_still    sh -c 'cd ex && DRAWS=747:961 ./r_showcase 961 still 2>&1 >/dev/null | awk "/^draws/ && \$3 > 0 { n++; print } END { exit n != 2 }"'
 check manual_examples   python3 ../doc_examples.py --check
 check manual_links      python3 ../doc_links.py
 check ai_disclosure     python3 ../check_disclosure.py
 check quick_reference   python3 ../check_quickref.py
+check serial_format     python3 ../check_serial.py
+# The hardware tests' settings live in one file, tests/hardware/test_board.h:
+# no other file may define the screen B choice or a pin of its own.
+check test_board_only   sh -c 'f=$(grep -rlE "^[[:space:]]*#[[:space:]]*define[[:space:]]+(SCREEN_B_BOARD|PIN_[A-Z_]+)\b" ../../.. --include="*.c" --include="*.h" --exclude-dir=build --exclude-dir=.git); echo "defined in: $f"; [ "$f" = "../../../tests/hardware/test_board.h" ]'
 
 echo "----"
 echo "$pass passed, $fail failed"

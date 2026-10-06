@@ -3,14 +3,14 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    demo_images.h
- * @brief   The M6 test images, compiled in from demo_images.c.
+ * @file    test_images.h
+ * @brief   The M6 test images, compiled in from test_images.c.
  *
- * demo_images.c is generated: see images/convert_test_images.sh. Each image
+ * test_images.c is generated: see images/convert_test_images.sh. Each image
  * is a whole BMP file as a byte array, plus its size.
  */
-#ifndef DEMO_IMAGES_H
-#define DEMO_IMAGES_H
+#ifndef TEST_IMAGES_H
+#define TEST_IMAGES_H
 #include <stdint.h>
 
 extern const uint8_t  img_d20[];        /* 64x64, transparent   */
@@ -22,4 +22,4 @@ extern const uint32_t img_banner_size;
 extern const uint8_t  img_landscape[];  /* 240x160              */
 extern const uint32_t img_landscape_size;
 
-#endif /* DEMO_IMAGES_H */
+#endif /* TEST_IMAGES_H */

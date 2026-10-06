@@ -14,7 +14,7 @@
 #include <string.h>
 #include "qa4p.h"
 #include "qg_image.h"
-#include "demo_images.h"
+#include "test_images.h"
 static uint8_t *load(const char *p, long *n){ FILE*f=fopen(p,"rb"); if(!f){printf("FAIL  can't open %s\n",p); exit(1);} fseek(f,0,SEEK_END); *n=ftell(f); fseek(f,0,SEEK_SET); uint8_t*b=malloc(*n); if(fread(b,1,*n,f)!=(size_t)*n) exit(1); fclose(f); return b; }
 static int fails=0;
 #define CHECK(c,msg) do{ if(c) printf("PASS  %s\n",msg); else {printf("FAIL  %s\n",msg); fails++;} }while(0)

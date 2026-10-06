@@ -1,6 +1,6 @@
 # 3. Examples
 
-Sixteen programs in [`examples/`](../../examples), from "hello" to a two-screen dice roller, plus two colour tools. Each builds as its own program: one build makes them all (`build/examples/qg4p_<name>.uf2`), so trying another means loading another file, not editing CMake.
+Seventeen programs in [`examples/`](../../examples), from "hello" to a two-screen dice roller, two colour tools, and a showcase that runs through the lot on two screens. Each builds as its own program: one build makes them all (`build/examples/qg4p_<name>.uf2`), so trying another means loading another file, not editing CMake.
 
 **Before the first one:** set your wiring in [`examples/board.h`](../../examples/board.h), once; every example uses it. Then build, load, and compare the screen with the picture here. Colours on real glass will differ a little. Positions and shapes shouldn't.
 
@@ -12,6 +12,7 @@ Sixteen programs in [`examples/`](../../examples), from "hello" to a two-screen 
 | [5 images](#5-images) | [6 two screens](#6-two-screens) | [7 asset pack](#7-asset-pack) | [8 animation, direct](#8-animation-direct) |
 | [9 framebuffer](#9-framebuffer) | [10 palette effects](#10-palette-effects) | [11 paint](#11-paint) | [12 sprites](#12-sprites) |
 | [13 dashboard](#13-dashboard) | [14 dice roller](#14-dice-roller) | [15 colour check](#15-colour-check) | [16 calibrate](#16-calibrate) |
+| [17 showcase](#17-showcase) | | | |
 
 ---
 
@@ -263,5 +264,23 @@ A test pattern for "is it the panel, my settings, or my camera?" arguments: the 
 Tunes a panel's colours live, from the USB serial monitor, until the grey ramp looks grey. Keys: `r` `g` `b` choose a channel; `+` `-` its gamma (mid-tones); `[` `]` its gain (full brightness); space flips between raw and adjusted; `p` prints the lines for `board.h`. Set `CALIBRATE_B` to 1 for screen B.
 
 Look at the ramp straight on, in the light the device will live in, next to a sheet of white paper if you have one. On a cheap panel, the right numbers depend on the viewing angle, so use the one you'll use. The right picture shows blue's gamma raised and its gain lowered: warmer greys, which is the fix for a panel that runs blue.
+
+<br clear="right">
+
+---
+
+## 17. Showcase
+
+<img src="../img/showcase_ball.png" width="320" align="right">
+
+`qg4p_showcase` · [`showcase.c`](../../examples/showcase.c) · screens A and B, both DIRECT
+
+Both screens become one wide picture, gap included, and about 30 seconds of scenes run on a loop: the title fading in; a pattern of lines, rings and arcs; a ball bouncing from one screen to the other, behind the gap; a message scrolling across both; a dice roll; and a closing card.
+
+**First, tell it where your screens are.** At power-up it writes LEFT and RIGHT on them for 3 seconds. Screens have no idea where you put them, so if the words are the wrong way round, change `BOARD_LEFT_SCREEN` in `board.h`. Then set `BOARD_GAP_PX` to the gap between them, in the left screen's pixels; `board.h` says how to measure it, and near enough is fine.
+
+Everything here is drawn on plain DIRECT screens, with no framebuffer. That's a choice, not a limit: examples 9 to 12 show what a framebuffer adds.
+
+Worth reading for three ideas: helpers that draw at "world" coordinates on whichever screen a shape touches (the library clips anything off the edge, text included); scenes driven by frame numbers, with only `main()` keeping time; and moving things on DIRECT screens without flicker, such as a ball erased by a background-coloured halo drawn around it. The README's pictures are made from it with `python3 tools/make_readme_images.py`.
 
 <br clear="right">

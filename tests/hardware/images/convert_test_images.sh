@@ -13,6 +13,6 @@ python3 $T $D/potion.png    --no-dither --out $D/potion.bmp    --c-array img_pot
 python3 $T $D/banner.png                --out $D/banner.bmp    --c-array img_banner
 python3 $T $D/landscape.png             --out $D/landscape.bmp --c-array img_landscape
 { printf '/* SPDX-License-Identifier: MIT-0 */\n/* SPDX-AI-Disclosure: ai-generated */\n/* SPDX-AI-Model: claude-opus-5-5 */\n/* SPDX-AI-Provider: Anthropic */\n'
-  cat $D/img_d20.c $D/img_potion.c $D/img_banner.c $D/img_landscape.c; } > tests/hardware/demo_images.c
+  cat $D/img_d20.c $D/img_potion.c $D/img_banner.c $D/img_landscape.c; } > tests/hardware/test_images.c
 rm $D/img_*.c
-echo "tests/hardware/demo_images.c written"
+echo "tests/hardware/test_images.c written"

@@ -102,14 +102,14 @@ Three ways to wire two screens, all tested against the rule above. Choose by whe
 | DC | GP4 | 6 | | Backlight A | GP8 | 11 |
 | RST | GP5 | 7 | | Backlight B | GP9 | 12 |
 
-**B. All on the right side** (SPI0, high pins): the layout this library was developed on, with screen B's backlight moved to the right side too.
+**B. On the right side** (SPI0, high pins): the layout this library was developed on, and the one `examples/board.h` and the hardware tests use. Everything is on the right side except screen B's backlight, GP15 on pin 20, directly across from pin 21; that keeps GP26 to GP28 free for analogue readings.
 
 | Wire | GP | Pin | | Wire | GP | Pin |
 |---|---|---|---|---|---|---|
 | SCK | GP18 | 24 | | CS screen A | GP17 | 22 |
 | MOSI | GP19 | 25 | | CS screen B | GP22 | 29 |
 | DC | GP20 | 26 | | Backlight A | GP16 | 21 |
-| RST | GP21 | 27 | | Backlight B | GP26 | 31 |
+| RST | GP21 | 27 | | Backlight B | GP15 | 20 |
 
 **C. Two separate buses** (SPI0 and SPI1): each screen has its own wires, so each keeps its own speed without the bus switching between them. More wires; worth it if the screens are far apart, or one is much slower than the other.
 
@@ -130,10 +130,10 @@ Whatever you choose, put the numbers in one place (the examples use `examples/bo
 
 ## Building
 
-This repository builds everything at once: the library, 16 examples and the hardware test programs.
+This repository builds everything at once: the library, 17 examples and the hardware test programs.
 
 1. Open the repository's folder in VS Code with the Pico extension. Since this project wasn't created by the extension, use its **Import Project** command; it may add its own settings block at the top of `CMakeLists.txt`, which is fine.
-2. **Configure CMake**, then **Compile Project**. The programs appear as `.uf2` files: `build/examples/qg4p_hello.uf2` and friends, and `build/tests/hardware/qg4p_m0.uf2` onwards.
+2. **Configure CMake**, then **Compile Project**. The programs appear as `.uf2` files: `build/examples/qg4p_hello.uf2` and friends, and `build/tests/hardware/qg4p_test_m0.uf2` onwards.
 3. Load one: hold BOOTSEL, plug the Pico in, drag the `.uf2` onto the drive that appears.
 
 To use QG4P in **your own** project, copy the `qg4p/` folder into it, and `qa4p/` if you use an asset pack, and see the next section. Each library folder stands alone: copy only the ones you use.
@@ -165,7 +165,7 @@ The things that go wrong, and why:
 - **The program's name must be the same everywhere** it appears: `add_executable(my_app ...)`, `target_link_libraries(my_app ...)`, and so on. A mismatch gives "not built by this project", CMake's way of saying you've introduced it to a stranger.
 - **Every `.c` file must be listed** in `add_executable`. A missing one gives "undefined reference" when linking, naming something from that file.
 - **After adding a file or a target, configure again** (*Configure CMake*). CMake only reads `CMakeLists.txt` when configuring.
-- Several programs in one project are just several `add_executable` blocks, each with its own name. That's how this repository builds 16 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
+- Several programs in one project are several `add_executable` blocks, each with its own name. That's how this repository builds 17 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
 
 **Changing a setting** from `qg_config.h`: put it on the library, marked `PUBLIC`, so the library and your program agree on its value:
 
