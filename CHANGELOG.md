@@ -1,5 +1,47 @@
 # Changelog
 
+## QM4P 0.2.0 (2026-10-06)
+
+A showcase example, pictures for the README, a tidier hardware test suite, and one graphics fix found along the way. Library versions in this release: **QG4P 1.1.1** (a bug fix) and **QA4P 1.0.0** (unchanged).
+
+### Fixed
+- **Text that starts left of the screen is placed exactly** (QG4P 1.1.1). Text positions are kept in 1/16 pixel and rounded to whole pixels, and the rounding used C's division, which rounds toward zero: for a negative position, that's the wrong way. `qg_print_at(s, -1, y, ...)` drew at x = 0, and every character left of the screen's edge sat one pixel too far right. **Who it affects:** anything that draws text partly off the left edge, such as scrolling text or a word sliding off a screen (it stalled for a frame at the edge), and centred lines wider than their space with wrap off, whose odd pixel of overhang fell on the wrong side. Text partly off the **top** edge was never affected: vertical positions are whole pixels throughout. Nothing changes for text at or right of x = 0, so every existing picture is the same. Kerning's rounding no longer relies on `>>` of a negative number, which C leaves to each compiler (no change with GCC). New host test `text_edges` checks a glyph at x and y = 0, -1, -8, -15, -16 and -17, pixel for pixel; it fails 19 of its 40 checks against QG4P 1.1.0.
+
+### Added
+- **The showcase**, `examples/showcase.c` (program `qg4p_showcase`, example 17). Two screens become one wide picture, the gap between them included, and six scenes loop in about 30 seconds: the title fading in, a pattern of lines, rings and arcs, a ball bouncing from screen to screen behind the gap, a message scrolling across both, a dice roll, and a closing card that fades out. At power-up it writes LEFT and RIGHT on the screens for 3 seconds, with each screen's label, driver and size, and the same over serial. Plain DIRECT screens only, built-in drawing only; scenes are driven by frame numbers, and a seeded random number generator makes every loop the same. It shows how to draw at "world" coordinates across two screens, how QG4P clips shapes and text off the edges, and how to move things on a DIRECT screen without flicker.
+- **Two settings in `examples/board.h`** for programs that treat the two screens as one picture: `BOARD_LEFT_SCREEN` (`BOARD_SCREEN_A` or `BOARD_SCREEN_B`: which screen is on your left) and `BOARD_GAP_PX` (the gap between the screens, measured in the left screen's pixels; `board.h` says how). Existing examples don't use them and are unchanged.
+- **Pictures in the README**: an animated GIF of the showcase (the bouncing ball and the scrolling text) after the opening paragraph, and a "What it looks like" section with three stills. All are made on a PC by one command, `python3 tools/make_readme_images.py`, which runs the showcase against stand-in screens and lays the two screens out side by side, as `board.h` places them. The stills' screens are new golden fingerprints in the host tests (`tests/host/showcase_stills.txt` lists the moments); the GIF isn't fingerprinted, since Pillow versions encode GIFs differently. `render_example.c` can now save every frame of a stretch (`FRAMES=first:last:step`).
+- **`tests/hardware/test_board.h`**: one place for the hardware tests' settings, which used to be written out in three files: the screen B choice (`SCREEN_B_BOARD`), every pin, the SPI speeds and each screen's panel settings. `test_setup.c`, `test_m0.c` and `test_m1.c` include it; M0 and M1 keep their step-by-step setup code. New host check `test_board_only`: no other file may define `SCREEN_B_BOARD` or a pin.
+- **One serial format for every hardware test** (`tests/hardware/test_log.h`). Each line is tagged with the test's name, and each step is one line under 100 characters:
+  ```
+  [M2] qg4p_test_m2: lines, boxes, circles, arcs, palette, clipping
+  [M2] Screen A: ST7789   240 x 320  SPI 37500000 Hz  DIRECT
+  [M2] 3/6 Circles: outlines, fills, thick rings -- look for round, outlines hugging fills
+  [M2]     drawn in A 3.1 ms, B 6.2 ms
+  [M2] Pass complete. Did every step look right? (answer in run_all.sh)
+  [M2] Repeating...
+  ```
+  `run_all.sh` shows each test's step lines, in the same words, before loading it. New host check `serial_format` (`tests/host/check_serial.py`) keeps the tests to the format and `run_all.sh` in step with them.
+
+### Changed
+- **The hardware tests are renamed** (with `git mv`, so their history follows them):
+
+  | QM4P 0.1.0 | QM4P 0.2.0 |
+  |---|---|
+  | `tests/hardware/m0_demo.c` ... `m8_demo.c` | `tests/hardware/test_m0.c` ... `test_m8.c` |
+  | `new_commands_demo.c` | `test_new_commands.c` |
+  | `demo_setup.c`, `demo_setup.h` | `test_setup.c`, `test_setup.h` |
+  | `demo_images.c`, `demo_images.h` | `test_images.c`, `test_images.h` |
+  | `demo_setup(title)` | `test_setup(tag, about)` |
+  | `demo_setup_ex(title, fb, size)` | `test_setup_ex(tag, about, fb, size)` |
+  | programs `qg4p_m0` ... `qg4p_m8` | `qg4p_test_m0` ... `qg4p_test_m8` |
+  | program `qg4p_new_commands` | `qg4p_test_new_commands` |
+
+  `run_all.sh --from` still takes the short names (`m4`, `new_commands`). Nothing drawn on a screen changed: every existing golden fingerprint is the same.
+- **Each hardware test's top comment** now says what it checks, what hardware it needs, and what to look for, step by step.
+- **Getting started, layout B:** screen B's backlight is on GP15 (pin 20), as on the development board, `examples/board.h` and `docs/WIRING.md`; the table said GP26 (pin 31). The note in `docs/RESOURCES.md` pointing out the difference is gone.
+- The root `CMakeLists.txt` keeps its four SPDX lines above the block the Pico VS Code extension adds, since the AI-disclosure check reads only the first lines of a file.
+
 ## QM4P 0.1.0 (2026-10-06)
 
 The repository becomes **QM4P, QuickMedia 4 Pico**: an umbrella for small, self-contained Pico libraries, each in its own folder. Library versions in this release: **QG4P 1.1.0** (graphics; no graphics changes) and **QA4P 1.0.0** (asset packs; new). QS4P (sound) is planned.

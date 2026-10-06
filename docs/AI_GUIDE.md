@@ -1,6 +1,6 @@
 # QM4P — AI working guide
 
-Condensed, exact reference for AI assistants writing code with **QM4P** (QuickMedia 4 Pico) for the **Dice Roller** project. QM4P is an umbrella repo of self-contained library folders: **QG4P** (QuickGraphics 4 Pico, `qg4p/`, v1.1.0) and **QA4P** (QuickAssets 4 Pico, `qa4p/`, v1.0.0); QS4P (sound) is planned. Repo: QM4P 0.1.0, https://github.com/PositronicPonderings/qm4p (formerly qg4p; MIT-0). Human docs: `docs/manual/` in the repo (one-page summary: `docs/manual/quick-reference.md`); hardware resources each library uses: `docs/RESOURCES.md`. Everything below is verified against the QM4P 0.1.0 source.
+Condensed, exact reference for AI assistants writing code with **QM4P** (QuickMedia 4 Pico) for the **Dice Roller** project. QM4P is an umbrella repo of self-contained library folders: **QG4P** (QuickGraphics 4 Pico, `qg4p/`, v1.1.1) and **QA4P** (QuickAssets 4 Pico, `qa4p/`, v1.0.0); QS4P (sound) is planned. Repo: QM4P 0.2.0, https://github.com/PositronicPonderings/qm4p (formerly qg4p; MIT-0). Human docs: `docs/manual/` in the repo (one-page summary: `docs/manual/quick-reference.md`); hardware resources each library uses: `docs/RESOURCES.md`. Everything below is verified against the QM4P 0.2.0 source.
 
 ## 1. What it is
 C11 graphics library, Raspberry Pi Pico 2 (RP2350), Pico SDK, SPI TFT screens (ST7789, ILI9341, ST7796S). QuickBasic-style API (`qg_cls`, `qg_line`, `qg_circle`, `qg_paint`, `qg_locate`, `qg_print`...), fonts with inline markup, 8-bit BMP images, flash asset pack, optional framebuffer (BUF8) screens. Asset packs are read by the separate QA4P library. Several screens share one SPI bus. Single-core; not thread-safe (shared static work buffers).
@@ -33,9 +33,11 @@ CMakeLists.txt   builds everything (project qm4p)
 qg4p/            graphics library, CMake target qg4p; header qg4p.h; settings qg_config.h
 qa4p/            asset pack library, CMake target qa4p; header qa4p.h (needs nothing from qg4p)
 examples/        17 examples, each its own target qg4p_<name>; wiring in examples/board.h
-tests/hardware/  milestone test programs qg4p_test_m0..m8, qg4p_test_new_commands; run_all.sh flashes each in turn
-tests/host/      PC tests: sh tests/host/run_tests.sh  (19 checks, gcc + python3 + Pillow + numpy)
-tools/           ttf2qg.py, img2bmp8.py, mkpack.py, size_report.py, size_audit.py
+                 (two-screen layout: BOARD_LEFT_SCREEN, BOARD_GAP_PX; qg4p_showcase uses them)
+tests/hardware/  milestone test programs qg4p_test_m0..m8, qg4p_test_new_commands; settings in
+                 test_board.h, serial lines via test_log.h; run_all.sh flashes each in turn
+tests/host/      PC tests: sh tests/host/run_tests.sh  (22 checks, gcc + python3 + Pillow + numpy)
+tools/           ttf2qg.py, img2bmp8.py, mkpack.py, size_report.py, size_audit.py, make_readme_images.py
 docs/manual/     the manual;  docs/RESOURCES.md  hardware resource register (SPI, DMA, PWM, flash plan)
 ```
 Each library folder is self-contained: copy only the ones you use. Using them in a project:
@@ -94,7 +96,7 @@ Check every `qg_err_t` in real code (`QG_OK` = 0). `qg_bus_t`, `qg_screen_t`, fo
 
 ## 5. Rules that the signatures don't tell you
 **Coordinates/colour**
-- Pixels are `int16_t`, (0,0) top-left; everything clips to the screen (or view); off-screen values are fine.
+- Pixels are `int16_t`, (0,0) top-left; everything clips to the screen (or view); off-screen values are fine, negative ones too. Text clips to the pixel as well (turn wrap off, `qg_screen_set_wrap(s, false)`, or a line reaching the right edge wraps); text at negative x is placed exactly since QG4P 1.1.1.
 - Colours are palette indices (`qg_color_t`, 16-bit). `QG_TRANSPARENT` (255) = don't draw this part; `QG_DEFAULT` = screen fg (bg for `qg_cls`/`qg_preset`); `QG_NONE` = no colour (from `qg_point`).
 - Shapes take `stroke, fill`; pass `QG_TRANSPARENT` for the part you don't want. Box corners inclusive, any order.
 - Thick outlines (box/circle/ellipse/arc) grow **inward**; thick lines are centred.
