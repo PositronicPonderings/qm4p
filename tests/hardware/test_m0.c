@@ -3,7 +3,7 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m0_demo.c
+ * @file    test_m0.c
  * @brief   Milestone 0 test: bring up the 2.0" ST7789 on the shared bus.
  *
  * WHAT IT CHECKS (watch the screen and the USB serial monitor)

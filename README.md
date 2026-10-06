@@ -64,7 +64,7 @@ if (qa_open(&art, QA_DEFAULT_OFFSET) == QA_OK && qa_find(&art, "icons/star.bmp",
 
 ## Building this repository
 
-Open the folder with the Raspberry Pi Pico VS Code extension (or configure it with CMake and the Pico SDK). One build produces every program: the examples in `build/examples/` (`qg4p_hello.uf2` and friends) and the hardware tests in `build/tests/hardware/`. Flash whichever you want. Set your wiring once in `examples/board.h`.
+Open the folder with the Raspberry Pi Pico VS Code extension (or configure it with CMake and the Pico SDK). One build produces every program: the examples in `build/examples/` (`qg4p_hello.uf2` and friends) and the hardware tests in `build/tests/hardware/` (`qg4p_test_m0.uf2` and friends). Flash whichever you want. Set your wiring once in `examples/board.h`.
 
 ## Testing
 

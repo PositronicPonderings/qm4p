@@ -3,13 +3,13 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m8_demo.c
+ * @file    test_m8.c
  * @brief   Milestone 8 test: the framebuffer (BUF8) backend.
  *
  * Screen A stays DIRECT; screen B becomes BUF8, so the two can
  * be compared side by side.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m8.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m8.uf2).
  *
  * PAGES
  *   1  Flicker      the same bouncing-dice code on both screens: DIRECT
@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
-#include "demo_images.h"
+#include "test_setup.h"
+#include "test_images.h"
 
 /* Screen B's framebuffer: one byte per pixel. Sized for the 3.5"
  * board; the 2.8" board simply uses the first 240 x 320 bytes of it.       */
@@ -317,7 +317,7 @@ static void page_scroll(void)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup_ex("Dice Roller qg4p - Milestone 8", fb_b, sizeof fb_b);
+    test_setup_ex("Dice Roller qg4p - Milestone 8", fb_b, sizeof fb_b);
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);

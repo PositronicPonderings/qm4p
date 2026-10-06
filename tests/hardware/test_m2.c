@@ -3,11 +3,11 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m2_demo.c
+ * @file    test_m2.c
  * @brief   Milestone 2 test: palette functions and the QuickBasic primitives,
  *          as a gallery of pages shown on both screens.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m2.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m2.uf2).
  *
  * PAGES (about 4 seconds each; the serial monitor says what to look for and
  * how long each page took to draw on each screen)
@@ -26,7 +26,7 @@
 #include <math.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 #define PAGE_MS 4000
 
@@ -250,7 +250,7 @@ static void page_clipping(qg_screen_t *s)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 2");
+    test_setup("Dice Roller qg4p - Milestone 2");
 
     while (true) {
         run_page("Page 1: lines",

@@ -39,7 +39,7 @@ typedef struct {
  * Everything needed to bring up one screen. Fill one in per display.
  *
  * PANEL SETTINGS: HOW TO FIND THE RIGHT VALUES
- *   Run demo/m1_demo.c (or m0_demo.c) and watch the screen:
+ *   Run tests/hardware/test_m1.c (or test_m0.c) and watch the screen:
  *     - First colour looks WHITE instead of BLACK  -> flip `invert`
  *     - RED shows as BLUE (and BLUE as RED)        -> flip `bgr`
  *     - Picture is mirrored                        -> flip mirror_x/mirror_y

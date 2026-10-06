@@ -33,7 +33,7 @@ CMakeLists.txt   builds everything (project qm4p)
 qg4p/            graphics library, CMake target qg4p; header qg4p.h; settings qg_config.h
 qa4p/            asset pack library, CMake target qa4p; header qa4p.h (needs nothing from qg4p)
 examples/        16 examples, each its own target qg4p_<name>; wiring in examples/board.h
-tests/hardware/  milestone test programs qg4p_m0..m8, qg4p_new_commands; run_all.sh flashes each in turn
+tests/hardware/  milestone test programs qg4p_test_m0..m8, qg4p_test_new_commands; run_all.sh flashes each in turn
 tests/host/      PC tests: sh tests/host/run_tests.sh  (19 checks, gcc + python3 + Pillow + numpy)
 tools/           ttf2qg.py, img2bmp8.py, mkpack.py, size_report.py, size_audit.py
 docs/manual/     the manual;  docs/RESOURCES.md  hardware resource register (SPI, DMA, PWM, flash plan)

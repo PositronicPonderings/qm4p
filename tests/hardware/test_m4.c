@@ -3,10 +3,10 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m4_demo.c
+ * @file    test_m4.c
  * @brief   Milestone 4 test: fonts and printing.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m4.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m4.uf2).
  *
  * PAGES
  *   1  Fonts      The three built-in fonts, scaling, symbols, and what a
@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 /* Fonts: data + default colour + scale. Static, because screens keep
  * pointers to them.                                                         */
@@ -179,7 +179,7 @@ static void page_cursor(qg_screen_t *s)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 4");
+    test_setup("Dice Roller qg4p - Milestone 4");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_sans);

@@ -3,11 +3,11 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m6_demo.c
+ * @file    test_m6.c
  * @brief   Milestone 6 test: images (8-bit BMP, RLE8), transparency,
  *          scaling and fitting.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m6.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m6.uf2).
  *
  * PAGES
  *   1  1:1        the landscape and banner at their own size; the d20 over a
@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
-#include "demo_images.h"
+#include "test_setup.h"
+#include "test_images.h"
 
 static qg_font_t f_body = QG_FONT_INIT(qg_font_sans_16, QG_DEFAULT, 1);
 static qg_font_t f_mono = QG_FONT_INIT(qg_font_mono_12, QG_DEFAULT, 1);
@@ -142,7 +142,7 @@ static void page_speed(qg_screen_t *s, const char *name)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 6");
+    test_setup("Dice Roller qg4p - Milestone 6");
 
     printf("\nOpening images:\n");
     open_or_report(&d20,        img_d20,       img_d20_size,       QG_IMAGE_TRANSPARENT, "d20");

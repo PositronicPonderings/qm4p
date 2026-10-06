@@ -7,7 +7,7 @@
 #include <string.h>
 #include "qg4p.h"
 #include "qg_internal.h"
-#include "demo_images.h"
+#include "test_images.h"
 #define PW 320
 #define PH 480
 #define TH 1600

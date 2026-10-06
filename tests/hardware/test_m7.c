@@ -3,10 +3,10 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m7_demo.c
+ * @file    test_m7.c
  * @brief   Milestone 7 test: loading images and text from the asset pack.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m7.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m7.uf2).
  *
  * THE PACK (separately from the firmware):
  *     python3 tools/mkpack.py tests/hardware/pack --out build/assets
@@ -27,7 +27,7 @@
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "qa4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 static qg_font_t f_body  = QG_FONT_INIT(qg_font_sans_16,      QG_DEFAULT, 1);
 static qg_font_t f_title = QG_FONT_INIT(qg_font_sans_bold_24, QG_YELLOW,  1);
@@ -179,7 +179,7 @@ static void page_errors(void)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 7");
+    test_setup("Dice Roller qg4p - Milestone 7");
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);
         qg_screen_set_font(screens[i], 1, &f_title);

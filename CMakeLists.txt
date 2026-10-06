@@ -45,4 +45,4 @@ pico_sdk_init()
 add_subdirectory(qg4p)             # the graphics library: qg4p
 add_subdirectory(qa4p)             # the asset pack library: qa4p
 add_subdirectory(examples)         # examples: qg4p_hello, ...
-add_subdirectory(tests/hardware)   # hardware test programs qg4p_m0 ... qg4p_m8
+add_subdirectory(tests/hardware)   # hardware test programs qg4p_test_m0 ... _m8, _new_commands

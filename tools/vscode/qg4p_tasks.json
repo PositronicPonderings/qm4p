@@ -52,16 +52,16 @@
         "examples/qg4p_dice_roller",
         "examples/qg4p_colour_check",
         "examples/qg4p_calibrate",
-        "tests/hardware/qg4p_m0",
-        "tests/hardware/qg4p_m1",
-        "tests/hardware/qg4p_m2",
-        "tests/hardware/qg4p_m3",
-        "tests/hardware/qg4p_m4",
-        "tests/hardware/qg4p_m5",
-        "tests/hardware/qg4p_m6",
-        "tests/hardware/qg4p_m7",
-        "tests/hardware/qg4p_m8",
-        "tests/hardware/qg4p_new_commands"
+        "tests/hardware/qg4p_test_m0",
+        "tests/hardware/qg4p_test_m1",
+        "tests/hardware/qg4p_test_m2",
+        "tests/hardware/qg4p_test_m3",
+        "tests/hardware/qg4p_test_m4",
+        "tests/hardware/qg4p_test_m5",
+        "tests/hardware/qg4p_test_m6",
+        "tests/hardware/qg4p_test_m7",
+        "tests/hardware/qg4p_test_m8",
+        "tests/hardware/qg4p_test_new_commands"
       ],
       "default": "examples/qg4p_hello"
     }

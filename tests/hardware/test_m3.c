@@ -3,11 +3,11 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m3_demo.c
+ * @file    test_m3.c
  * @brief   Milestone 3 test: relative (percentage) coordinates, and the
  *          faster arcs.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m3.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m3.uf2).
  *
  * PAGES
  *   1  Layout     A mock dice-roller screen drawn ONLY with _pct calls, on
@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 static qg_screen_t *const screens[2] = { &scr_a, &scr_b };
 static const char   *const names[2]   = { "A", "B" };
@@ -227,7 +227,7 @@ static void page_dial(void)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 3");
+    test_setup("Dice Roller qg4p - Milestone 3");
 
     while (true) {
         page_layout();

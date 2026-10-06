@@ -38,19 +38,19 @@ build test_line_widths  test_line_widths.c $L/qg_draw.c
 build test_text_edges   test_text_edges.c $BASE
 build test_scroll       test_scroll.c $BASE
 build imgtest           imgtest.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c
-build test_assets       test_assets.c $A/qa4p.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c $H/demo_images.c
+build test_assets       test_assets.c $A/qa4p.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c $H/test_images.c
 build test_buf8_a       test_buf8_a.c $BASE $BUF8
-build test_buf8_b       test_buf8_b.c $BASE $BUF8 $H/demo_images.c
-build test_buf8_overlap test_buf8_overlap.c $BASE $BUF8 $H/demo_images.c
-build test_new_commands test_new_commands.c $BASE $BUF8 $H/demo_images.c
+build test_buf8_b       test_buf8_b.c $BASE $BUF8 $H/test_images.c
+build test_buf8_overlap test_buf8_overlap.c $BASE $BUF8 $H/test_images.c
+build test_new_commands test_new_commands.c $BASE $BUF8 $H/test_images.c
 build render_m2         render_m2.c screenstub.c $BASE
 build render_m3         render_m3.c $BASE
 build render_m4         render_m4.c $BASE
 build render_m5         render_m5.c $BASE
-build render_m6         render_m6.c $BASE $H/demo_images.c
+build render_m6         render_m6.c $BASE $H/test_images.c
 build render_m7         render_m7.c $BASE $A/qa4p.c
-build render_m8         render_m8.c $BASE $BUF8 $H/demo_images.c
-build render_new        render_new.c $BASE $BUF8 $H/demo_images.c
+build render_m8         render_m8.c $BASE $BUF8 $H/test_images.c
+build render_new        render_new.c $BASE $BUF8 $H/test_images.c
 
 # The examples run unchanged against stand-in screens (render_example.c),
 # each stopped at a representative moment. STOP = calls to sleep_ms().

@@ -3,7 +3,7 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m1_demo.c
+ * @file    test_m1.c
  * @brief   Milestone 1 test: two screens on one shared bus, each with its own
  *          driver, SPI speed and backlight brightness.
  *

@@ -13,11 +13,11 @@ static void ff(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t 
   for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++){fb[cur][j][i][0]=r;fb[cur][j][i][1]=g;fb[cur][j][i][2]=b;}}
 static const qg_backend_t tb={.name="T",.fill_rect=ff};
 qg_bus_t bus; qg_screen_t scr_a, scr_b;
-void demo_setup(const char*t){(void)t;}
+void test_setup(const char*t){(void)t;}
 void sleep_ms(uint32_t m){(void)m;} uint64_t time_us_64(void){return 0;}
 #define printf(...) ((void)0)
 #define main demo_main
-#include "../hardware/m2_demo.c"
+#include "../hardware/test_m2.c"
 #undef main
 #undef printf
 static void mk(qg_screen_t*s,int w,int h){ s->width=w;s->height=h; qg_view_reset(s); { static qg_text_line_t qg_hist_pool[4][QG_TEXT_HISTORY_LINES]; static const void *qg_hist_owner[4]; int k_ = 0; while (k_ < 3 && qg_hist_owner[k_] && qg_hist_owner[k_] != (const void *)(s)) k_++; qg_hist_owner[k_] = (s); (s)->hist = qg_hist_pool[k_]; (s)->hist_cap = QG_TEXT_HISTORY_LINES; }s->ready=true;s->backend=&tb;s->fg_color=QG_WHITE;s->line_width=1; qg_palette_copy_standard(s->palette);}

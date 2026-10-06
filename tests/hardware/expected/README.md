@@ -2,7 +2,7 @@
 
 What each hardware test page should look like, drawn by the real library code on a PC (see `tests/host`). Flash a test, then compare the screen with its picture here.
 
-Names say which program, which page and which screen: `m5_page2_screenA.png` is page 2 of `qg4p_m5`, on screen A.
+Names say which program, which page and which screen: `m5_page2_screenA.png` is page 2 of `qg4p_test_m5`, on screen A.
 
 **Before you compare:**
 - **Colours will look a little different.** Cheap panels, viewing angles and your room's lighting all shift them; shapes, positions and text should match exactly.

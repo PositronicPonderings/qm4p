@@ -6,10 +6,10 @@
 #  Hardware test programs, one per development milestone.
 #
 #  Every program here builds as its own target, so a single build produces
-#  all of them: build/tests/hardware/qg4p_m0.uf2 ... qg4p_m8.uf2. To try a
+#  all of them: build/tests/hardware/qg4p_test_m0.uf2 ... qg4p_test_m8.uf2. To try a
 #  different one, flash a different .uf2; no CMake editing needed.
 #
-#  Wiring and board choice: demo_setup.c (M2 onward) and docs/WIRING.md.
+#  Wiring and board choice: test_setup.c (M2 onward) and docs/WIRING.md.
 #  To flash and check every one in turn: sh tests/hardware/run_all.sh
 # ---------------------------------------------------------------------------
 
@@ -30,13 +30,13 @@ function(qg4p_test name)
     pico_add_extra_outputs(${name})           # makes the .uf2
 endfunction()
 
-qg4p_test(qg4p_m0 m0_demo.c)                                      # one ST7789
-qg4p_test(qg4p_m1 m1_demo.c)                                      # two screens
-qg4p_test(qg4p_m2 m2_demo.c demo_setup.c)                         # shapes
-qg4p_test(qg4p_m3 m3_demo.c demo_setup.c)                         # percentages
-qg4p_test(qg4p_m4 m4_demo.c demo_setup.c)                         # fonts
-qg4p_test(qg4p_m5 m5_demo.c demo_setup.c)                         # markup, scroll
-qg4p_test(qg4p_m6 m6_demo.c demo_setup.c demo_images.c)           # images
-qg4p_test(qg4p_m7 m7_demo.c demo_setup.c ASSETS)                  # asset pack
-qg4p_test(qg4p_m8 m8_demo.c demo_setup.c demo_images.c)           # framebuffer
-qg4p_test(qg4p_new_commands new_commands_demo.c demo_setup.c demo_images.c)  # VIEW, GET/PUT, styles
+qg4p_test(qg4p_test_m0 test_m0.c)                                        # one ST7789
+qg4p_test(qg4p_test_m1 test_m1.c)                                        # two screens
+qg4p_test(qg4p_test_m2 test_m2.c test_setup.c)                           # shapes
+qg4p_test(qg4p_test_m3 test_m3.c test_setup.c)                           # percentages
+qg4p_test(qg4p_test_m4 test_m4.c test_setup.c)                           # fonts
+qg4p_test(qg4p_test_m5 test_m5.c test_setup.c)                           # markup, scroll
+qg4p_test(qg4p_test_m6 test_m6.c test_setup.c test_images.c)             # images
+qg4p_test(qg4p_test_m7 test_m7.c test_setup.c ASSETS)                    # asset pack
+qg4p_test(qg4p_test_m8 test_m8.c test_setup.c test_images.c)             # framebuffer
+qg4p_test(qg4p_test_new_commands test_new_commands.c test_setup.c test_images.c)  # VIEW, GET/PUT, styles

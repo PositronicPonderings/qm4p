@@ -133,7 +133,7 @@ Whatever you choose, put the numbers in one place (the examples use `examples/bo
 This repository builds everything at once: the library, 16 examples and the hardware test programs.
 
 1. Open the repository's folder in VS Code with the Pico extension. Since this project wasn't created by the extension, use its **Import Project** command; it may add its own settings block at the top of `CMakeLists.txt`, which is fine.
-2. **Configure CMake**, then **Compile Project**. The programs appear as `.uf2` files: `build/examples/qg4p_hello.uf2` and friends, and `build/tests/hardware/qg4p_m0.uf2` onwards.
+2. **Configure CMake**, then **Compile Project**. The programs appear as `.uf2` files: `build/examples/qg4p_hello.uf2` and friends, and `build/tests/hardware/qg4p_test_m0.uf2` onwards.
 3. Load one: hold BOOTSEL, plug the Pico in, drag the `.uf2` onto the drive that appears.
 
 To use QG4P in **your own** project, copy the `qg4p/` folder into it, and `qa4p/` if you use an asset pack, and see the next section. Each library folder stands alone: copy only the ones you use.

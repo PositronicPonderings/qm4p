@@ -13,7 +13,7 @@
 #include <math.h>
 #include "qg4p.h"
 #include "qg_internal.h"
-#include "demo_images.h"
+#include "test_images.h"
 
 #define W 240
 #define H 320

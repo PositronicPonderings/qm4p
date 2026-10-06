@@ -3,13 +3,13 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    new_commands_demo.c
+ * @file    test_new_commands.c
  * @brief   Test of the commands added for the public release: VIEW, LINE
  *          styles, PRESET, CSRLIN/POS (screen A, DIRECT) and GET/PUT
  *          (screen B, framebuffer).
  *
  * Built by tests/hardware/CMakeLists.txt as its own target
- * (qg4p_new_commands.uf2).
+ * (qg4p_test_new_commands.uf2).
  *
  * PAGES
  *   1  VIEW      a clip-only view cutting shapes off, and a moved-origin
@@ -23,8 +23,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
-#include "demo_images.h"
+#include "test_setup.h"
+#include "test_images.h"
 
 static uint8_t fb_b[320 * 480];
 
@@ -194,7 +194,7 @@ static void page_preset(void)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup_ex("QG4P - new commands", fb_b, sizeof fb_b);
+    test_setup_ex("QG4P - new commands", fb_b, sizeof fb_b);
     qg_screen_t *screens[2] = { &scr_a, &scr_b };
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);

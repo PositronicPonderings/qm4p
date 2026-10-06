@@ -1,8 +1,8 @@
 # Milestone history
 
-> Written during development, before the library was renamed QG4P. Names here are as they were then: `gfx_*` is now `qg_*`, `GFX_*` is `QG_*`, `demo/` is `tests/hardware/`, and the "DM" and "player" screens are screens A and B.
+> Written during development, before the library was renamed QG4P. Names here are as they were then: `gfx_*` is now `qg_*`, `GFX_*` is `QG_*`, and the "DM" and "player" screens are screens A and B. The test programs, then `demo/m0_demo.c` and so on, are now `tests/hardware/test_m0.c` to `test_m8.c`, built as `qg4p_test_m0` to `qg4p_test_m8`; each milestone below names its program as it is today.
 
-How the library was built, one milestone at a time. Each milestone ended with a test program in `demo/` and was checked on real hardware before the next began. The checklists below are what "pass" looked like; the notes and results record what was measured and what was found and fixed along the way.
+How the library was built, one milestone at a time. Each milestone ended with a test program (now in `tests/hardware/`) and was checked on real hardware before the next began. The checklists below are what "pass" looked like; the notes and results record what was measured and what was found and fixed along the way.
 
 Hardware throughout: Raspberry Pi Pico 2 (RP2350); 2.0" ST7789 240x320 (DM screen); 2.8" ILI9341 240x320 and 3.5" ST7796S 320x480 (player screen); all on one shared SPI bus at 37.5 MHz.
 
@@ -28,7 +28,7 @@ Hardware throughout: Raspberry Pi Pico 2 (RP2350); 2.0" ST7789 240x320 (DM scree
 
 ## M1 checklist
 
-The build's source file is set on the `add_executable` line of the top-level `CMakeLists.txt`. For M1 it's `demo/m1_demo.c`.
+Program: `qg4p_test_m1` (`tests/hardware/test_m1.c`).
 
 | Check | Pass looks like | If not |
 |---|---|---|
@@ -46,7 +46,7 @@ All tests passed with both player boards. Every board runs at 37.5 MHz on the br
 
 ## M2 checklist
 
-Build line: `add_executable(dice_gfx demo/m2_demo.c demo/demo_setup.c)`. Choose the player board at the top of `demo/demo_setup.c`.
+Program: `qg4p_test_m2` (`tests/hardware/test_m2.c`, with `test_setup.c`). Choose the player board with `SCREEN_B_BOARD` in `tests/hardware/test_setup.c`.
 
 The demo cycles through six pages on both screens, printing what to look for and how long each page took.
 
@@ -61,7 +61,7 @@ The demo cycles through six pages on both screens, printing what to look for and
 
 ## M3 checklist
 
-Build line: `add_executable(dice_gfx demo/m3_demo.c demo/demo_setup.c)`.
+Program: `qg4p_test_m3` (`tests/hardware/test_m3.c`, with `test_setup.c`).
 
 | Page | Pass looks like |
 |---|---|
@@ -73,7 +73,7 @@ Build line: `add_executable(dice_gfx demo/m3_demo.c demo/demo_setup.c)`.
 
 ## M4 checklist
 
-Build line: `add_executable(dice_gfx demo/m4_demo.c demo/demo_setup.c)`.
+Program: `qg4p_test_m4` (`tests/hardware/test_m4.c`, with `test_setup.c`).
 
 | Page | Pass looks like |
 |---|---|
@@ -83,7 +83,7 @@ Build line: `add_executable(dice_gfx demo/m4_demo.c demo/demo_setup.c)`.
 
 ## M5 checklist
 
-Build line: `add_executable(dice_gfx demo/m5_demo.c demo/demo_setup.c)`.
+Program: `qg4p_test_m5` (`tests/hardware/test_m5.c`, with `test_setup.c`).
 
 | Page | Pass looks like |
 |---|---|
@@ -98,7 +98,7 @@ Build line: `add_executable(dice_gfx demo/m5_demo.c demo/demo_setup.c)`.
 
 ## M6 checklist
 
-Build line: `add_executable(dice_gfx demo/m6_demo.c demo/demo_setup.c demo/demo_images.c)`.
+Program: `qg4p_test_m6` (`tests/hardware/test_m6.c`, with `test_setup.c` and `test_images.c`).
 
 | Page | Pass looks like |
 |---|---|
@@ -112,13 +112,7 @@ Build line: `add_executable(dice_gfx demo/m6_demo.c demo/demo_setup.c demo/demo_
 
 ## M7 checklist
 
-Top-level `CMakeLists.txt`:
-```cmake
-add_subdirectory(gfx)
-add_subdirectory(assets)
-add_executable(dice_gfx demo/m7_demo.c demo/demo_setup.c)
-target_link_libraries(dice_gfx pico_stdlib gfx assets)
-```
+Program: `qg4p_test_m7` (`tests/hardware/test_m7.c`, with `test_setup.c`; it links the asset pack library, now QA4P).
 
 | Step | Pass looks like |
 |---|---|
@@ -136,7 +130,7 @@ target_link_libraries(dice_gfx pico_stdlib gfx assets)
 
 ## M8 checklist
 
-Build line: `add_executable(dice_gfx demo/m8_demo.c demo/demo_setup.c demo/demo_images.c)`. The DM screen stays DIRECT and the player becomes BUF8.
+Program: `qg4p_test_m8` (`tests/hardware/test_m8.c`, with `test_setup.c` and `test_images.c`). The DM screen stays DIRECT and the player becomes BUF8.
 
 | Page | Pass looks like |
 |---|---|

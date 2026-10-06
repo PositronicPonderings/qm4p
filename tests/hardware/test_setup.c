@@ -3,7 +3,7 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    demo_setup.c
+ * @file    test_setup.c
  * @brief   Shared hardware setup for the test programs (M2 onward).
  *
  * All panel settings here were confirmed on hardware in M1
@@ -11,7 +11,7 @@
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 /* ========================================================================== */
 /*  Which board is screen B?                                        */
@@ -53,11 +53,11 @@ static void print_screen_info(const char *label, const qg_screen_t *s)
 }
 
 /*
- * The shared setup, told which backend screen B uses. Only demo_setup_ex()
+ * The shared setup, told which backend screen B uses. Only test_setup_ex()
  * below ever passes QG_BACKEND_BUF8, and the linker leaves out functions a
- * program never calls, so tests that use demo_setup() don't carry the
- * framebuffer code. (It used to be the other way round, demo_setup() calling
- * demo_setup_ex(), which quietly put 5 KB of framebuffer into every test.)
+ * program never calls, so tests that use test_setup() don't carry the
+ * framebuffer code. (It used to be the other way round, test_setup() calling
+ * test_setup_ex(), which quietly put 5 KB of framebuffer into every test.)
  */
 static void setup(const char *title, const struct qg_backend *backend_b,
                   uint8_t *fb_b, uint32_t fb_b_size)
@@ -127,12 +127,12 @@ static void setup(const char *title, const struct qg_backend *backend_b,
     print_screen_info("B", &scr_b);
 }
 
-void demo_setup(const char *title)
+void test_setup(const char *title)
 {
     setup(title, QG_BACKEND_DIRECT, NULL, 0);
 }
 
-void demo_setup_ex(const char *title, uint8_t *fb_b, uint32_t fb_b_size)
+void test_setup_ex(const char *title, uint8_t *fb_b, uint32_t fb_b_size)
 {
     setup(title, fb_b ? QG_BACKEND_BUF8 : QG_BACKEND_DIRECT, fb_b, fb_b_size);
 }

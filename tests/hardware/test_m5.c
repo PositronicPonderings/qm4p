@@ -3,11 +3,11 @@
 /* SPDX-AI-Model: claude-opus-5-5 */
 /* SPDX-AI-Provider: Anthropic */
 /**
- * @file    m5_demo.c
+ * @file    test_m5.c
  * @brief   Milestone 5 test: markup, tabs, word wrap, alignment, measuring
  *          and scrolling.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_m5.uf2).
+ * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m5.uf2).
  *
  * PAGES
  *   1  Markup     colours by name and number, font and size changes inside
@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "demo_setup.h"
+#include "test_setup.h"
 
 static qg_font_t f_body  = QG_FONT_INIT(qg_font_sans_16,      QG_DEFAULT, 1);
 static qg_font_t f_title = QG_FONT_INIT(qg_font_sans_bold_24, QG_YELLOW,  1);
@@ -159,7 +159,7 @@ static void page_scroll(qg_screen_t *s, const char *name)
 /* ========================================================================== */
 int main(void)
 {
-    demo_setup("Dice Roller qg4p - Milestone 5");
+    test_setup("Dice Roller qg4p - Milestone 5");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);

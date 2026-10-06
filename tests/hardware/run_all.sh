@@ -8,7 +8,7 @@
 #
 #  Run:   sh tests/hardware/run_all.sh [--pack] [--from m4] [build-dir]
 #
-#    --pack       first load the asset pack qg4p_m7 needs, made beforehand by
+#    --pack       first load the asset pack qg4p_test_m7 needs, made beforehand by
 #                 python3 tools/mkpack.py tests/hardware/pack --out build/assets
 #    --from NAME  start part-way through: m0 ... m8, new_commands
 #    build-dir    where the build put the programs (default: build)
@@ -53,7 +53,7 @@ fi
 missing=""
 command -v picotool > /dev/null 2>&1 ||
     missing="$missing\n  picotool, on the PATH (the Pico VS Code extension keeps one in ~/.pico-sdk/picotool/)"
-for t in $TESTS; do [ -f "$HW/qg4p_$t.uf2" ] || missing="$missing\n  $HW/qg4p_$t.uf2  (build first)"; done
+for t in $TESTS; do [ -f "$HW/qg4p_test_$t.uf2" ] || missing="$missing\n  $HW/qg4p_test_$t.uf2  (build first)"; done
 [ $PACK = 0 ] || [ -f "$PACKFILE" ] ||
     missing="$missing\n  $PACKFILE  (python3 tools/mkpack.py tests/hardware/pack --out $BUILD/assets)"
 [ -z "$missing" ] || { printf 'Missing, so nothing was flashed:%b\n' "$missing"; exit 1; }
@@ -86,21 +86,21 @@ about() {
 
 # --- The pack, if asked for --------------------------------------------------
 if [ $PACK = 1 ]; then
-    echo "Loading the asset pack for qg4p_m7 at 0x10100000..."
+    echo "Loading the asset pack for qg4p_test_m7 at 0x10100000..."
     picotool load -f "$PACKFILE" -o 0x10100000 || { echo "picotool couldn't load the pack."; exit 1; }
 fi
 
 # --- Each test in turn -------------------------------------------------------
 pass=0; fail=0; skip=0; quit=0; table=""
 for t in $TESTS; do
-    if [ $quit = 1 ]; then table="$table\n  qg4p_$t\tskipped"; skip=$((skip + 1)); continue; fi
+    if [ $quit = 1 ]; then table="$table\n  qg4p_test_$t\tskipped"; skip=$((skip + 1)); continue; fi
     echo
-    echo "=== qg4p_$t ==="
+    echo "=== qg4p_test_$t ==="
     about $t | sed 's/^/  /'
-    [ $t = m7 ] && [ $PACK = 0 ] && echo "  (Reminder: M7 needs its pack loaded first: --pack, or see m7_demo.c.)"
+    [ $t = m7 ] && [ $PACK = 0 ] && echo "  (Reminder: M7 needs its pack loaded first: --pack, or see test_m7.c.)"
     answer=r
     while [ $answer = r ]; do
-        picotool load -f -x "$HW/qg4p_$t.uf2" || echo "  picotool couldn't load it. Stuck? Hold BOOTSEL, replug, [r]eload."
+        picotool load -f -x "$HW/qg4p_test_$t.uf2" || echo "  picotool couldn't load it. Stuck? Hold BOOTSEL, replug, [r]eload."
         answer=""
         while [ -z "$answer" ]; do
             printf 'Pass? [Y]es / [n]o / [r]eload / [q]uit: '
@@ -112,9 +112,9 @@ for t in $TESTS; do
         done
     done
     case $answer in
-        y) table="$table\n  qg4p_$t\tPASS"; pass=$((pass + 1)) ;;
-        n) table="$table\n  qg4p_$t\tFAIL"; fail=$((fail + 1)) ;;
-        q) table="$table\n  qg4p_$t\tskipped"; skip=$((skip + 1)); quit=1 ;;
+        y) table="$table\n  qg4p_test_$t\tPASS"; pass=$((pass + 1)) ;;
+        n) table="$table\n  qg4p_test_$t\tFAIL"; fail=$((fail + 1)) ;;
+        q) table="$table\n  qg4p_test_$t\tskipped"; skip=$((skip + 1)); quit=1 ;;
     esac
 done
 

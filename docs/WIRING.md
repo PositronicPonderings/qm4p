@@ -76,7 +76,7 @@ Listed pin 1 to pin 9:
 | 4 | SDA | MOSI | GP19 | Not I2C | **ORANGE** |
 | 5 | RST | RST | GP21 | Shared | **WHITE** |
 | 6 | DC | DC | GP20 | Shared | **BLUE** |
-| 7 | CS | CS | GP22 | Takes the ILI9341's place: set `SCREEN_B_BOARD` in `tests/hardware/demo_setup.c` (the examples use `BOARD_B_*` in `examples/board.h`) | **GREEN** |
+| 7 | CS | CS | GP22 | Takes the ILI9341's place: set `SCREEN_B_BOARD` in `tests/hardware/test_setup.c` (the examples use `BOARD_B_*` in `examples/board.h`) | **GREEN** |
 | 8 | BL | BL | GP15 | Backlight | **PURPLE** |
 | 9 | SDA-O | MISO | Not connected | | N/A |
 
@@ -85,7 +85,7 @@ Listed pin 1 to pin 9:
 
 ## 3. Pico 2 pin assignments (shared bus)
 
-All pins can be changed in one place: `examples/board.h` for the examples, the `#define` block in `tests/hardware/demo_setup.c` for the hardware tests. Everything except screen B's backlight is on the right-hand side of the Pico (physical pins 21 to 29). Screen B's backlight, GP15 on pin 20, sits directly across from pin 21. The ADC pins (GP26 to GP28) are left free for battery monitoring later.
+All pins can be changed in one place: `examples/board.h` for the examples, the `#define` block in `tests/hardware/test_setup.c` for the hardware tests. Everything except screen B's backlight is on the right-hand side of the Pico (physical pins 21 to 29). Screen B's backlight, GP15 on pin 20, sits directly across from pin 21. The ADC pins (GP26 to GP28) are left free for battery monitoring later.
 
 | Signal | Pico GPIO | Physical pin | Goes to | Colour |
 |---|---|---|---|---|
