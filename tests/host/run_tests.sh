@@ -54,12 +54,14 @@ build render_new        render_new.c $BASE $BUF8 $H/test_images.c
 
 # The examples run unchanged against stand-in screens (render_example.c),
 # each stopped at a representative moment. STOP = calls to sleep_ms().
+# The showcase is stopped at several moments, listed in showcase_stills.txt
+# (the README's pictures; see tools/make_readme_images.py).
 EX="hello:1 shapes:1 text:25 layout:1 images:1 two_screens:40 asset_pack:1 animation_direct:70 framebuffer:70 palette_effects:40 paint:14 sprites:60 dashboard:160 dice_roller:150 colour_check:1 calibrate:1"
 E=../../examples
 EXCF="-std=c11 -O1 -w -Istubs_examples -Istubs -I$L -I$A -I$E -DQA_HOST_TEST"
 EXLIB="$BASE $BUF8 $A/qa4p.c $E/example_art.c"
 mkdir -p $B/ex
-for ex in $EX; do
+for ex in $EX showcase:0; do
     n=${ex%%:*}
     gcc $EXCF -Dmain=example_main -c $E/$n.c -o $B/ex/$n.o 2> $B/ex/$n.build.log &&
     gcc $EXCF -o $B/ex/r_$n render_example.c $B/ex/$n.o $EXLIB -lm 2>> $B/ex/$n.build.log ||
@@ -92,7 +94,8 @@ check buf8_scroll_image ./test_buf8_b
 check buf8_overlap      ./test_buf8_overlap
 check new_commands      ./test_new_commands
 check render_pages      sh -c 'rm -f *.ppm; for r in render_m2 render_m3 render_m4 render_m5 render_m6 render_m7 render_m8 render_new; do ./$r || exit 1; done'
-check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted'
+check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted &&
+                               while read n stop rest; do case $n in ""|"#"*) continue ;; esac; ./r_showcase $stop showcase_$n > showcase_$n.log || exit 1; done < ../../showcase_stills.txt'
 check golden_images     sh -c 'sha256sum -c ../golden.sha256 --quiet'
 check manual_examples   python3 ../doc_examples.py --check
 check manual_links      python3 ../doc_links.py

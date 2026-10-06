@@ -130,7 +130,7 @@ Whatever you choose, put the numbers in one place (the examples use `examples/bo
 
 ## Building
 
-This repository builds everything at once: the library, 16 examples and the hardware test programs.
+This repository builds everything at once: the library, 17 examples and the hardware test programs.
 
 1. Open the repository's folder in VS Code with the Pico extension. Since this project wasn't created by the extension, use its **Import Project** command; it may add its own settings block at the top of `CMakeLists.txt`, which is fine.
 2. **Configure CMake**, then **Compile Project**. The programs appear as `.uf2` files: `build/examples/qg4p_hello.uf2` and friends, and `build/tests/hardware/qg4p_test_m0.uf2` onwards.
@@ -165,7 +165,7 @@ The things that go wrong, and why:
 - **The program's name must be the same everywhere** it appears: `add_executable(my_app ...)`, `target_link_libraries(my_app ...)`, and so on. A mismatch gives "not built by this project", CMake's way of saying you've introduced it to a stranger.
 - **Every `.c` file must be listed** in `add_executable`. A missing one gives "undefined reference" when linking, naming something from that file.
 - **After adding a file or a target, configure again** (*Configure CMake*). CMake only reads `CMakeLists.txt` when configuring.
-- Several programs in one project are just several `add_executable` blocks, each with its own name. That's how this repository builds 16 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
+- Several programs in one project are just several `add_executable` blocks, each with its own name. That's how this repository builds 17 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
 
 **Changing a setting** from `qg_config.h`: put it on the library, marked `PUBLIC`, so the library and your program agree on its value:
 

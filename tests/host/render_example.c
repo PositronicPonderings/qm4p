@@ -7,6 +7,11 @@
  * screens, stops it after STOP calls to sleep_ms() (or when it settles into
  * an idle loop), and saves each screen as a PPM.
  *   Usage: render_example_<name> <stop> <out_prefix>
+ *
+ * FRAMES=first:last:step also saves the screens at every step-th call to
+ * sleep_ms() from first to last, as <out_prefix>_NNNN_a.ppm and _b.ppm
+ * (NNNN = the call's number), for animations. An example that sleeps once
+ * per frame, like the showcase, gives one picture per frame.
  */
 #include <setjmp.h>
 #include <stdio.h>
@@ -91,9 +96,18 @@ static void load_pack(void)
     size_t n = fread(qa_host_flash + QA_DEFAULT_OFFSET, 1, 1 << 20, f); fclose(f); (void)n;
 }
 
-/* ---- stopping the example ---- */
+/* ---- stopping the example (and saving frames on the way, see FRAMES) ---- */
 static jmp_buf done; static long sleeps, stop_at; static uint64_t fake_us;
-void sleep_ms(uint32_t ms) { fake_us += (uint64_t)ms * 1000u; if (++sleeps >= stop_at) longjmp(done, 1); }
+static long f_first, f_last, f_step; static const char *f_prefix;
+static void dump_both(const char *prefix, const char *sep);
+void sleep_ms(uint32_t ms)
+{
+    fake_us += (uint64_t)ms * 1000u; ++sleeps;
+    if (f_step > 0 && sleeps >= f_first && sleeps <= f_last && (sleeps - f_first) % f_step == 0) {
+        char p[160]; snprintf(p, sizeof p, "%s_%04ld", f_prefix, sleeps); dump_both(p, "_");
+    }
+    if (sleeps >= stop_at) longjmp(done, 1);
+}
 void tight_loop_contents(void) { longjmp(done, 1); }         /* an idle loop means "finished" */
 uint64_t time_us_64(void) { return fake_us += 50; }
 /* Serial input: keys "typed" from the QG_KEYS environment variable, then nothing. */
@@ -119,19 +133,26 @@ static void dump(const char *name, qg_screen_t *s)
     fclose(f);
 }
 
+static void dump_both(const char *prefix, const char *sep)
+{
+    char name[192];
+    if (has_b) {
+        snprintf(name, sizeof name, "%s%sa.ppm", prefix, sep); dump(name, &screen_a);
+        snprintf(name, sizeof name, "%s%sb.ppm", prefix, sep); dump(name, &screen_b);
+    } else {
+        snprintf(name, sizeof name, "%s.ppm", prefix); dump(name, &screen_a);
+    }
+}
+
 int main(int argc, char **argv)
 {
     stop_at = argc > 1 ? atol(argv[1]) : 1;
     const char *prefix = argc > 2 ? argv[2] : "out";
+    f_prefix = prefix;
+    if (getenv("FRAMES") && sscanf(getenv("FRAMES"), "%ld:%ld:%ld", &f_first, &f_last, &f_step) != 3) f_step = 0;
     load_pack();
     if (!setjmp(done)) example_main();
-    char name[128];
-    if (has_b) {
-        snprintf(name, sizeof name, "%s_a.ppm", prefix); dump(name, &screen_a);
-        snprintf(name, sizeof name, "%s_b.ppm", prefix); dump(name, &screen_b);
-    } else {
-        snprintf(name, sizeof name, "%s.ppm", prefix); dump(name, &screen_a);
-    }
+    dump_both(prefix, "_");
     if (oob) fprintf(stderr, "%s: %ld out-of-bounds writes\n", prefix, oob);
     return oob != 0;
 }

@@ -39,7 +39,9 @@ ex_out = os.path.join(here, "..", "..", "examples", "expected")
 os.makedirs(ex_out, exist_ok=True)
 k = 0
 for f in sorted(os.listdir(ex_build)) if os.path.isdir(ex_build) else []:
-    if f.endswith(".ppm"):
+    # (The showcase's pictures are the README's, made side by side by
+    # tools/make_readme_images.py, so they're left out here.)
+    if f.endswith(".ppm") and not f.startswith("showcase_"):
         Image.open(os.path.join(ex_build, f)).save(os.path.join(ex_out, f[:-4] + ".png"), optimize=True)
         k += 1
 print("%d example images written to examples/expected/" % k)

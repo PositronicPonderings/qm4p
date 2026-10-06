@@ -2,6 +2,8 @@
 
 Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphics, asset packs and, soon, sound, each with a friendly API. Every library lives in its own folder and needs only the Pico SDK, never another library, so a project copies in just the folders it uses and carries nothing else. They share one style (simple calls, plain-English comments, "pay only for what you use") and one [register of the hardware each uses](docs/RESOURCES.md), so they can run side by side on one chip.
 
+![The showcase on a 2.0-inch and a 3.5-inch screen side by side: a red ball bounces across both screens, passing behind the gap between them, then a coloured message scrolls from the right-hand screen to the left](docs/img/showcase.gif)
+
 | Library | Folder | What it is | Copy it when |
 |---|---|---|---|
 | **QG4P**, QuickGraphics 4 Pico | `qg4p/` | Graphics on small SPI screens: `CLS`, `PSET`, `LINE`, `CIRCLE`, `PAINT`, `LOCATE`, `PRINT`, fonts, images, flicker-free framebuffers | your project draws on a screen |
@@ -10,7 +12,17 @@ Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphi
 
 > **Too busy to read a manual?** [Everything on one page](docs/manual/quick-reference.md).
 >
-> **The manual is in [`docs/manual`](docs/manual/README.md):** quick answers, 16 examples, a reference entry with a working example and a picture for every function, tools, troubleshooting, getting started, adding a new display chip, and how it all works.
+> **The manual is in [`docs/manual`](docs/manual/README.md):** quick answers, 17 examples, a reference entry with a working example and a picture for every function, tools, troubleshooting, getting started, adding a new display chip, and how it all works.
+
+## What it looks like
+
+The showcase example, `qg4p_showcase`, turns two screens into one wide picture and runs through what the library can do, in about 30 seconds a loop. These are its screens drawn on a PC by the real library code, side by side at 1:1, as they sit on the bench:
+
+| Title | Shapes | Dice roll |
+|---|---|---|
+| <img src="docs/img/showcase_title.png" width="260" alt="Title: QuickGraphics 4 Pico on a starry sky, on both screens"> | <img src="docs/img/showcase_shapes.png" width="260" alt="Shapes: string-art curves, rainbow rings and arcs, fitted to each screen"> | <img src="docs/img/showcase_dice.png" width="260" alt="Dice: a 6 and a 5 on green felt, Roll: 6 + 5 = 11"> |
+
+Wire two screens, set `examples/board.h`, flash `qg4p_showcase`.
 
 ## QG4P: QuickGraphics 4 Pico
 
@@ -24,7 +36,7 @@ qg4p/            QuickGraphics: copy this folder into your project
   qg4p.h         the one header a program includes
 qa4p/            QuickAssets: copy this folder too if you use an asset pack
   qa4p.h         its one header
-examples/        16 example programs, each its own build target qg4p_<name> (wiring: examples/board.h)
+examples/        17 example programs, each its own build target qg4p_<name> (wiring: examples/board.h)
 tests/
   hardware/      the test programs used to develop the libraries, one per milestone,
                  and run_all.sh, which flashes each in turn and asks what you saw
@@ -71,7 +83,13 @@ Open the folder with the Raspberry Pi Pico VS Code extension (or configure it wi
 ```
 sh tests/host/run_tests.sh
 ```
-Runs the drawing, text, image, asset and framebuffer code on a PC against fake screens, independent references and "golden" fingerprints of 79 rendered screens, including every example. Needs gcc, Python 3, Pillow and numpy.
+Runs the drawing, text, image, asset and framebuffer code on a PC against fake screens, independent references and "golden" fingerprints of 95 rendered screens, including every example and the showcase pictures below. Needs gcc, Python 3, Pillow and numpy.
+
+The README's pictures of the showcase (`docs/img/`) are made the same way, with one command:
+```
+python3 tools/make_readme_images.py
+```
+It runs `examples/showcase.c` on the PC, lays the two screens out side by side as `examples/board.h` places them, and writes the stills and the GIF. Run it after changing the showcase; the host tests' fingerprints of the stills will need updating too (see [`tests/host/README.md`](tests/host/README.md)).
 
 On the hardware, after a build and with the test asset pack made (`python3 tools/mkpack.py tests/hardware/pack --out build/assets`):
 ```

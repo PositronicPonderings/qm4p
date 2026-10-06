@@ -1,8 +1,8 @@
 # Examples
 
-Sixteen small programs: fourteen from "hello" to a two-screen dice roller, plus two colour tools for when something looks wrong (a test pattern, and a calibrator). Each builds as its own program: one build, sixteen `.uf2` files in `build/examples/`. Flash whichever you like; no CMake editing required.
+Seventeen small programs: fourteen from "hello" to a two-screen dice roller, two colour tools for when something looks wrong (a test pattern, and a calibrator), and a showcase that runs through everything on two screens. Each builds as its own program: one build, seventeen `.uf2` files in `build/examples/`. Flash whichever you like; no CMake editing required.
 
-**First, tell them about your wiring.** Every example gets its screens from `board.h` (with `board_init()`, or `board_init_fb()` for a framebuffer screen). Set your pins and boards there once and all sixteen follow. The defaults match `docs/WIRING.md`. If you want to see how a screen is actually brought to life, read `board.c`: it's short and commented within an inch of its life.
+**First, tell them about your wiring.** Every example gets its screens from `board.h` (with `board_init()`, or `board_init_fb()` for a framebuffer screen). Set your pins and boards there once and all seventeen follow. The defaults match `docs/WIRING.md`. If you want to see how a screen is actually brought to life, read `board.c`: it's short and commented within an inch of its life.
 
 **Switching programs without the BOOTSEL ritual.** Once any QG4P program is running, `picotool` can reboot it into BOOTSEL over USB and load the next one:
 
@@ -12,7 +12,7 @@ picotool load -f -x build/examples/qg4p_dice_roller.uf2
 
 For a pick list inside VS Code, add the task in `tools/vscode/qg4p_tasks.json` to your `.vscode/tasks.json` (instructions inside the file), then use *Terminal > Run Task... > QG4P: Load a program*.
 
-**Then compare.** Each example has a picture of what it should look like in `expected/`, drawn by the real library code on a PC. Colours on real glass will differ a bit (cheap panels have opinions); shapes, text and positions should match.
+**Then compare.** Each example has a picture of what it should look like in `expected/` (the showcase's are the README's, in `docs/img/`), drawn by the real library code on a PC. Colours on real glass will differ a bit (cheap panels have opinions); shapes, text and positions should match.
 
 | # | Program | Screens | What it shows | Picture |
 |---|---|---|---|---|
@@ -32,6 +32,7 @@ For a pick list inside VS Code, add the task in `tools/vscode/qg4p_tasks.json` t
 | 14 | `qg4p_dice_roller` | A + B (BUF8) | The game one: tumbling dice, a roll log, a histogram | [A](expected/dice_roller_a.png), [B](expected/dice_roller_b.png) |
 | 15 | `qg4p_colour_check` | A (or both) | A test pattern: named colours with their RGB values, labelled pure colours, ramps, corner labels | [swatches](expected/colour_check.png), [diagnostics](expected/colour_check_diagnostics.png) |
 | 16 | `qg4p_calibrate` | A (or B) | Tune a panel's colours live from the USB serial monitor; prints a line for `board.h` | [start](expected/calibrate.png), [after tuning](expected/calibrate_adjusted.png) |
+| 17 | `qg4p_showcase` | A + B | Two screens as one wide picture: a title, shapes, a ball and a message crossing the gap, a dice roll; set `BOARD_LEFT_SCREEN` and `BOARD_GAP_PX` in `board.h` | [title](../docs/img/showcase_title.png), [ball](../docs/img/showcase_ball.png), [moving](../docs/img/showcase.gif) |
 
 Some pictures are a single moment of something that moves (a bouncing ball, a scrolling log); some include random numbers, which will differ on your screen. That's not a bug. That's dice.
 

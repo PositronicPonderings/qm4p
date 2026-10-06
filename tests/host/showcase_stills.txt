@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MIT-0
+# SPDX-AI-Disclosure: ai-generated
+# SPDX-AI-Model: claude-opus-5-5
+# SPDX-AI-Provider: Anthropic
+#
+# The moments of the showcase (examples/showcase.c) that become the README's
+# still pictures, docs/img/showcase_<name>.png, and whose screens are
+# fingerprinted in golden.sha256 (as ex/showcase_<name>_a.ppm and _b.ppm).
+# Read by tools/make_readme_images.py and tests/host/run_tests.sh.
+#
+# Each line: a name, then STOP, the number of the sleep_ms() call to stop
+# at (see render_example.c). The showcase sleeps once for its start-up
+# check, then once after every frame, so frame f of a scene is
+#     STOP = 1 + (frames in the scenes before it) + f + 1
+# with the scenes 150, 150, 180, 180, 150 and 150 frames long.
+#
+# name    STOP    scene, frame
+title     142   # Title, frame 140: the whole title is up
+shapes    277   # Shapes, frame 125: the finished pattern
+ball      334   # Bouncing ball, frame 32: the ball crossing the gap
+scroll    602   # Scrolling text, frame 120: the message across the gap
+dice      787   # Dice roll, frame 125: the dice settled, the total shown
