@@ -6,34 +6,13 @@
  * @file    test_setup.c
  * @brief   Shared hardware setup for the test programs (M2 onward).
  *
- * All panel settings here were confirmed on hardware in M1
- * (see docs/WIRING.md, section 4).
+ * The pins, SPI speeds and panel settings all come from test_board.h, the
+ * one place they're set for every hardware test.
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "test_setup.h"
-
-/* ========================================================================== */
-/*  Which board is screen B?                                        */
-/* ========================================================================== */
-#define SCREEN_B_ILI9341  1   /* 2.8" red board   */
-#define SCREEN_B_ST7796   2   /* 3.5" blue board  */
-
-#define SCREEN_B_BOARD    SCREEN_B_ST7796
-
-/* ========================================================================== */
-/*  Wiring (see docs/WIRING.md)                                              */
-/* ========================================================================== */
-#define PIN_SCK        18   /* shared   YELLOW */
-#define PIN_MOSI       19   /* shared   ORANGE */
-#define PIN_DC         20   /* shared   BLUE   */
-#define PIN_RST        21   /* shared   WHITE  */
-#define PIN_CS_A      17   /* GREEN  */
-#define PIN_CS_B  22   /* GREEN  */
-#define PIN_BL_A      16   /* PURPLE */
-#define PIN_BL_B  15   /* PURPLE */
-
-/* ========================================================================== */
+#include "test_board.h"
 
 qg_bus_t    bus;
 qg_screen_t scr_a;
@@ -77,42 +56,32 @@ static void setup(const char *title, const struct qg_backend *backend_b,
     qg_err_t err = qg_bus_init(&bus, &bus_cfg);
     if (err != QG_OK) halt("Bus init FAILED", err);
 
-    /* --- screen A: 2.0" ST7789 -------------------------------------------- */
+    /* --- Screen A --------------------------------------------------------- */
     /* Text scrolling memory: the M5 and M8 tests scroll on both screens.
      * (A framebuffer screen B scrolls by moving pixels and doesn't use it.) */
     static qg_text_line_t history_a[QG_TEXT_HISTORY_LINES], history_b[QG_TEXT_HISTORY_LINES];
 
     const qg_screen_config_t cfg_a = {
-        .driver = QG_DRIVER_ST7789, .cs_pin = PIN_CS_A,
-        .bl_pin = PIN_BL_A, .bl_active_high = true, .spi_hz = 40000000u,
-        .width = 240, .height = 320,
-        .bgr = false, .invert = true, .mirror_x = false, .mirror_y = false,
+        .driver = A_DRIVER, .cs_pin = PIN_CS_A,
+        .bl_pin = PIN_BL_A, .bl_active_high = true, .spi_hz = A_SPI_HZ,
+        .width = A_WIDTH, .height = A_HEIGHT,
+        .bgr = A_BGR, .invert = A_INVERT, .mirror_x = A_MIRROR_X, .mirror_y = A_MIRROR_Y,
         .rotation = QG_ROT_0, .backend = QG_BACKEND_DIRECT,
         .text_history = history_a, .text_history_lines = QG_TEXT_HISTORY_LINES,
     };
     err = qg_screen_init(&scr_a, &bus, &cfg_a);
     if (err != QG_OK) halt("screen A init FAILED", err);
 
-    /* --- Screen B ------------------------------------------------------ */
-#if SCREEN_B_BOARD == SCREEN_B_ILI9341
+    /* --- Screen B --------------------------------------------------------- */
+    /* Either board (SCREEN_B_BOARD in test_board.h): the settings follow. */
     qg_screen_config_t cfg_b = {
-        .driver = QG_DRIVER_ILI9341, .cs_pin = PIN_CS_B,
-        .bl_pin = PIN_BL_B, .bl_active_high = true, .spi_hz = 40000000u,
-        .width = 240, .height = 320,
-        .bgr = true, .invert = false, .mirror_x = true, .mirror_y = false,
+        .driver = B_DRIVER, .cs_pin = PIN_CS_B,
+        .bl_pin = PIN_BL_B, .bl_active_high = true, .spi_hz = B_SPI_HZ,
+        .width = B_WIDTH, .height = B_HEIGHT,
+        .bgr = B_BGR, .invert = B_INVERT, .mirror_x = B_MIRROR_X, .mirror_y = B_MIRROR_Y,
         .rotation = QG_ROT_0, .backend = QG_BACKEND_DIRECT,
         .text_history = history_b, .text_history_lines = QG_TEXT_HISTORY_LINES,
     };
-#else
-    qg_screen_config_t cfg_b = {
-        .driver = QG_DRIVER_ST7796, .cs_pin = PIN_CS_B,
-        .bl_pin = PIN_BL_B, .bl_active_high = true, .spi_hz = 40000000u,
-        .width = 320, .height = 480,
-        .bgr = true, .invert = false, .mirror_x = true, .mirror_y = false,
-        .rotation = QG_ROT_0, .backend = QG_BACKEND_DIRECT,
-        .text_history = history_b, .text_history_lines = QG_TEXT_HISTORY_LINES,
-    };
-#endif
     if (fb_b != NULL) {
         cfg_b.backend            = backend_b;
         cfg_b.framebuffer        = fb_b;

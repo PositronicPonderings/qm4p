@@ -11,8 +11,8 @@
  *   Test 1 - Named colours
  *     Clears the screen to each of the 16 QuickBasic colours in turn and
  *     prints the expected name over USB serial. Use it to tune the panel:
- *       - First colour is WHITE, not BLACK?     -> flip PANEL_INVERT
- *       - RED looks BLUE and BLUE looks RED?    -> flip PANEL_BGR
+ *       - First colour is WHITE, not BLACK?     -> flip A_INVERT
+ *       - RED looks BLUE and BLUE looks RED?    -> flip A_BGR
  *
  *   Test 2 - Orientation and offsets (all four rotations)
  *     Draws a 1-pixel white border (all four edges must be visible; a
@@ -23,7 +23,7 @@
  *             .            .
  *            BLUE ....... YELLOW
  *     If the corners are swapped left/right, the panel is mirrored: flip
- *     PANEL_MIRROR_X. If swapped top/bottom, flip PANEL_MIRROR_Y.
+ *     A_MIRROR_X. If swapped top/bottom, flip A_MIRROR_Y.
  *
  *   Test 3 - Fill speed
  *     Times 32 full-screen clears through the colour cube and reports the
@@ -39,31 +39,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "qg_internal.h"   /* demo-only: raw rectangle fill until M2's qg_box() */
-
-/* ========================================================================== */
-/*  Wiring: change these to match your breadboard (see docs/WIRING.md)       */
-/* ========================================================================== */
-#define PIN_SCK        18   /* SPI0 SCK  -> board SCL / SCK                    */
-#define PIN_MOSI       19   /* SPI0 TX   -> board SDA / SDI(MOSI)              */
-#define PIN_DC         20   /* shared DC                                       */
-#define PIN_RST        21   /* shared reset                                    */
-#define PIN_CS_A      17   /* CS of screen A   (2.0" ST7789 in M0)       */
-#define PIN_CS_B  22   /* CS of screen B (parked high in M0)     */
-#define PIN_BL_A      16   /* backlight, screen A (PURPLE)                   */
-
-/* SPI speed. 40 MHz asks for the fastest "safe" rate; the Pico 2 delivers
- * 37.5 MHz. On long breadboard jumpers, drop to 20000000 if you see
- * speckles or shifted pixels.                                                */
-#define SPI_HZ         40000000u
-
-/* Panel settings for the 2.0" GMT020-02 board. Adjust per Test 1 and 2.     */
-#define PANEL_INVERT   true
-#define PANEL_BGR      false
-#define PANEL_MIRROR_X false
-#define PANEL_MIRROR_Y false
-
-/* ========================================================================== */
+#include "qg_internal.h"   /* test-only: raw rectangle fill until M2's qg_box() */
+#include "test_board.h"    /* the pins, SPI speed and panel settings          */
 
 static qg_bus_t    bus;
 static qg_screen_t scr_a;
@@ -179,19 +156,19 @@ int main(void)
 
     /* --- Screen A: 2.0" ST7789 240x320 -------------------------------- */
     const qg_screen_config_t cfg_a = {
-        .driver         = QG_DRIVER_ST7789,
+        .driver         = A_DRIVER,
         .cs_pin         = PIN_CS_A,
         .bl_pin         = PIN_BL_A,
         .bl_active_high = true,
-        .spi_hz         = SPI_HZ,
-        .width          = 240,
-        .height         = 320,
+        .spi_hz         = A_SPI_HZ,
+        .width          = A_WIDTH,
+        .height         = A_HEIGHT,
         .x_offset       = 0,
         .y_offset       = 0,
-        .bgr            = PANEL_BGR,
-        .invert         = PANEL_INVERT,
-        .mirror_x       = PANEL_MIRROR_X,
-        .mirror_y       = PANEL_MIRROR_Y,
+        .bgr            = A_BGR,
+        .invert         = A_INVERT,
+        .mirror_x       = A_MIRROR_X,
+        .mirror_y       = A_MIRROR_Y,
         .rotation       = QG_ROT_0,
         .backend        = QG_BACKEND_DIRECT,
     };

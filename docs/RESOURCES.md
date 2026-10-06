@@ -12,7 +12,7 @@ A resource is chosen in one of three ways:
 - **fixed**: the library always uses the same one.
 - **set by config**: your program chooses, in a config struct or a setting.
 
-Defaults are the dev board's wiring (layout B in [getting started](manual/07-getting-started.md#layouts-for-two-screens)), as set in `examples/board.h` and `tests/hardware/test_setup.c`.
+Defaults are the dev board's wiring (layout B in [getting started](manual/07-getting-started.md#layouts-for-two-screens)), as set in `examples/board.h` and `tests/hardware/test_board.h`.
 
 ---
 
@@ -90,7 +90,7 @@ The dev board's wiring, and what's being kept free.
 
 **GP9 to GP11 are reserved for QS4P's I2S, and GP3 for the amplifier's shutdown pin.** Layout A uses GP3 (MOSI) and GP9 (backlight B); layout C uses GP3, GP10 and GP11.
 
-**GP26 to GP28 stay free for the ADC** (battery monitoring). They are the only pins that can read a voltage. Note that the layout B table in getting started puts screen B's backlight on GP26; the dev board itself (`examples/board.h`, `tests/hardware/test_setup.c`, [`WIRING.md`](WIRING.md)) uses GP15, which keeps all three ADC pins free.
+**GP26 to GP28 stay free for the ADC** (battery monitoring). They are the only pins that can read a voltage. Note that the layout B table in getting started puts screen B's backlight on GP26; the dev board itself (`examples/board.h`, `tests/hardware/test_board.h`, [`WIRING.md`](WIRING.md)) uses GP15, which keeps all three ADC pins free.
 
 **DMA channels are always claimed, never fixed.** Every QM4P library asks the SDK for a free channel, so they can't collide with each other. Code that uses a fixed channel number should claim it first (`dma_channel_claim`) before any library starts, or it may take one a library already has.
 

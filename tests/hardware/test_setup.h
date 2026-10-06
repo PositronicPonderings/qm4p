@@ -6,9 +6,9 @@
  * @file    test_setup.h
  * @brief   Shared hardware setup for the test programs (M2 onward).
  *
- * Every demo needs the same bus and the same two screens, so that setup lives
- * here once. Change the wiring or board choice in test_setup.c, and every
- * demo follows.
+ * Every test needs the same bus and the same two screens, so that setup
+ * lives here once. The wiring, the board choice and the panel settings are
+ * in test_board.h: change them there, and every test follows.
  */
 #ifndef TEST_SETUP_H
 #define TEST_SETUP_H

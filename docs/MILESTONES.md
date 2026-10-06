@@ -1,6 +1,6 @@
 # Milestone history
 
-> Written during development, before the library was renamed QG4P. Names here are as they were then: `gfx_*` is now `qg_*`, `GFX_*` is `QG_*`, and the "DM" and "player" screens are screens A and B. The test programs, then `demo/m0_demo.c` and so on, are now `tests/hardware/test_m0.c` to `test_m8.c`, built as `qg4p_test_m0` to `qg4p_test_m8`; each milestone below names its program as it is today.
+> Written during development, before the library was renamed QG4P. Names here are as they were then: `gfx_*` is now `qg_*`, `GFX_*` is `QG_*`, and the "DM" and "player" screens are screens A and B. The test programs, then `demo/m0_demo.c` and so on, are now `tests/hardware/test_m0.c` to `test_m8.c`, built as `qg4p_test_m0` to `qg4p_test_m8`; each milestone below names its program as it is today. The pins and panel settings each test once set for itself (`PANEL_INVERT`, `PLAYER_BGR` and the rest) are now all in `tests/hardware/test_board.h`, as `A_INVERT`, `B_BGR` and so on.
 
 How the library was built, one milestone at a time. Each milestone ended with a test program (now in `tests/hardware/`) and was checked on real hardware before the next began. The checklists below are what "pass" looked like; the notes and results record what was measured and what was found and fixed along the way.
 
@@ -46,7 +46,7 @@ All tests passed with both player boards. Every board runs at 37.5 MHz on the br
 
 ## M2 checklist
 
-Program: `qg4p_test_m2` (`tests/hardware/test_m2.c`, with `test_setup.c`). Choose the player board with `SCREEN_B_BOARD` in `tests/hardware/test_setup.c`.
+Program: `qg4p_test_m2` (`tests/hardware/test_m2.c`, with `test_setup.c`). Choose the player board with `SCREEN_B_BOARD` in `tests/hardware/test_board.h`.
 
 The demo cycles through six pages on both screens, printing what to look for and how long each page took.
 

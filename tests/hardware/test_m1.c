@@ -9,7 +9,7 @@
  *
  *   screen A      2.0" ST7789           CS GP17, backlight GP16
  *   Screen B  2.8" ILI9341          CS GP22, backlight GP15
- *                  (or the 3.5" ST7796S - set SCREEN_B_BOARD below)
+ *                  (or the 3.5" ST7796S - set SCREEN_B_BOARD in test_board.h)
  *
  * WHAT IT CHECKS (watch both screens and the USB serial monitor)
  *
@@ -40,59 +40,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
-#include "qg_internal.h"   /* demo-only: raw rectangle fill until M2's qg_box() */
-
-/* ========================================================================== */
-/*  Which board is screen B?                                        */
-/* ========================================================================== */
-#define SCREEN_B_ILI9341  1   /* 2.8" red board   */
-#define SCREEN_B_ST7796   2   /* 3.5" blue board  */
-
-#define SCREEN_B_BOARD    SCREEN_B_ST7796
-
-/* ========================================================================== */
-/*  Wiring (see docs/WIRING.md)                                              */
-/* ========================================================================== */
-#define PIN_SCK        18   /* shared   YELLOW */
-#define PIN_MOSI       19   /* shared   ORANGE */
-#define PIN_DC         20   /* shared   BLUE   */
-#define PIN_RST        21   /* shared   WHITE  */
-#define PIN_CS_A      17   /* GREEN  */
-#define PIN_CS_B  22   /* GREEN  */
-#define PIN_BL_A      16   /* PURPLE */
-#define PIN_BL_B  15   /* PURPLE */
-
-/* ========================================================================== */
-/*  Per-screen settings                                                      */
-/* ========================================================================== */
-
-/* screen A: 2.0" ST7789, settings confirmed in M0. */
-#define A_SPI_HZ          40000000u   /* -> 37.5 MHz actual */
-
-#if SCREEN_B_BOARD == SCREEN_B_ILI9341
-  /* 2.8" ILI9341. Settings taken from the working POC (MADCTL 0x48, no INVON).
-   * Confirmed on hardware in M1 at 37.5 MHz.                                */
-  #define B_DRIVER    QG_DRIVER_ILI9341
-  #define B_W         240
-  #define B_H         320
-  #define B_SPI_HZ    40000000u   /* -> 37.5 MHz actual */
-  #define B_INVERT    false
-  #define B_BGR       true
-  #define B_MIRROR_X  true
-  #define B_MIRROR_Y  false
-#else
-  /* 3.5" ST7796S. Settings confirmed on hardware in M1.                     */
-  #define B_DRIVER    QG_DRIVER_ST7796
-  #define B_W         320
-  #define B_H         480
-  #define B_SPI_HZ    40000000u   /* -> 37.5 MHz actual */
-  #define B_INVERT    false
-  #define B_BGR       true
-  #define B_MIRROR_X  true
-  #define B_MIRROR_Y  false
-#endif
-
-/* ========================================================================== */
+#include "qg_internal.h"   /* test-only: raw rectangle fill until M2's qg_box() */
+#include "test_board.h"    /* the pins, SPI speeds and panel settings         */
 
 static qg_bus_t    bus;
 static qg_screen_t scr_a;
@@ -253,10 +202,10 @@ int main(void)
 
     /* --- screen A ---------------------------------------------------------- */
     const qg_screen_config_t cfg_a = {
-        .driver = QG_DRIVER_ST7789, .cs_pin = PIN_CS_A,
+        .driver = A_DRIVER, .cs_pin = PIN_CS_A,
         .bl_pin = PIN_BL_A, .bl_active_high = true, .spi_hz = A_SPI_HZ,
-        .width = 240, .height = 320, .x_offset = 0, .y_offset = 0,
-        .bgr = false, .invert = true, .mirror_x = false, .mirror_y = false,
+        .width = A_WIDTH, .height = A_HEIGHT, .x_offset = 0, .y_offset = 0,
+        .bgr = A_BGR, .invert = A_INVERT, .mirror_x = A_MIRROR_X, .mirror_y = A_MIRROR_Y,
         .rotation = QG_ROT_0, .backend = QG_BACKEND_DIRECT,
     };
     err = qg_screen_init(&scr_a, &bus, &cfg_a);
@@ -266,7 +215,7 @@ int main(void)
     const qg_screen_config_t cfg_b = {
         .driver = B_DRIVER, .cs_pin = PIN_CS_B,
         .bl_pin = PIN_BL_B, .bl_active_high = true, .spi_hz = B_SPI_HZ,
-        .width = B_W, .height = B_H, .x_offset = 0, .y_offset = 0,
+        .width = B_WIDTH, .height = B_HEIGHT, .x_offset = 0, .y_offset = 0,
         .bgr = B_BGR, .invert = B_INVERT,
         .mirror_x = B_MIRROR_X, .mirror_y = B_MIRROR_Y,
         .rotation = QG_ROT_0, .backend = QG_BACKEND_DIRECT,

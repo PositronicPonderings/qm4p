@@ -98,6 +98,9 @@ check manual_examples   python3 ../doc_examples.py --check
 check manual_links      python3 ../doc_links.py
 check ai_disclosure     python3 ../check_disclosure.py
 check quick_reference   python3 ../check_quickref.py
+# The hardware tests' settings live in one file, tests/hardware/test_board.h:
+# no other file may define the screen B choice or a pin of its own.
+check test_board_only   sh -c 'f=$(grep -rlE "^[[:space:]]*#[[:space:]]*define[[:space:]]+(SCREEN_B_BOARD|PIN_[A-Z_]+)\b" ../../.. --include="*.c" --include="*.h" --exclude-dir=build --exclude-dir=.git); echo "defined in: $f"; [ "$f" = "../../../tests/hardware/test_board.h" ]'
 
 echo "----"
 echo "$pass passed, $fail failed"
