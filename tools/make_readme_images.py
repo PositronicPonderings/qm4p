@@ -23,7 +23,7 @@ HOW
     way tests/host/run_tests.sh renders every example (render_example.c):
     this script compiles it with gcc, stops it at each chosen moment, and
     saves each screen. Then it lays the two screens out with Pillow, using
-    examples/board.h's BOARD_LEFT_SCREEN and BOARD_GAP_PX, just as the
+    examples/board.h's BOARD_LEFT_SCREEN and BOARD_GAP_PX, the same way the
     showcase does on the hardware.
 
     The showcase is driven by frame numbers and seeds its random numbers
@@ -147,7 +147,7 @@ def main():
     # One shared palette for every frame, picked from a few frames spread
     # through the clip (the screens use only a few dozen colours). With the
     # same palette throughout, frames differ only where something moved, and
-    # the GIF stores just those parts.
+    # the GIF stores only those parts.
     sheet = Image.new("RGB", (frames[0].width, frames[0].height * 4))
     for i, k in enumerate((0, len(frames) // 3, 2 * len(frames) // 3, len(frames) - 1)):
         sheet.paste(frames[k], (0, i * frames[0].height))

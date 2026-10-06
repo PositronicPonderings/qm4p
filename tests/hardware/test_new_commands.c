@@ -25,7 +25,7 @@
  *                view wrapping at the view's edge and cut off at its bottom
  *   2  Styles    on A: dashed, dotted and dash-dot lines, thin and thick; a
  *                dashed diagonal; a styled box outline
- *   3  GET/PUT   on B: a d20 stamped with PSET (square), TRANSPARENT (just
+ *   3  GET/PUT   on B: a d20 stamped with PSET (square), TRANSPARENT (only
  *                the die) and XOR, then slid across a busy background with
  *                XOR, which leaves the background exactly as it was
  *   4  PRESET    on A: a dotted line erased point by point; POS and CSRLIN

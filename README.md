@@ -16,11 +16,13 @@ Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphi
 
 ## What it looks like
 
-The showcase example, `qg4p_showcase`, turns two screens into one wide picture and runs through what the library can do, in about 30 seconds a loop. These are its screens drawn on a PC by the real library code, side by side at 1:1, as they sit on the bench:
+`qg4p_showcase` turns two screens into one wide picture and runs through what the library can do, about 30 seconds a loop. These are its screens, drawn on a PC by the real library code and laid side by side at 1:1, the way they sit on the bench:
 
 | Title | Shapes | Dice roll |
 |---|---|---|
 | <img src="docs/img/showcase_title.png" width="260" alt="Title: QuickGraphics 4 Pico on a starry sky, on both screens"> | <img src="docs/img/showcase_shapes.png" width="260" alt="Shapes: string-art curves, rainbow rings and arcs, fitted to each screen"> | <img src="docs/img/showcase_dice.png" width="260" alt="Dice: a 6 and a 5 on green felt, Roll: 6 + 5 = 11"> |
+
+**Every picture here is drawn without a framebuffer.** Both screens run DIRECT: each shape lands on the glass the moment it's drawn, a moving ball is erased by painting the background back over where it was, and the whole program fits in about 16 KB of RAM. QG4P also has framebuffer screens (BUF8). A framebuffer is a sketchpad: you draw in private, then hold the finished page up to the screen in one go. That's where whole-scene animation without a flicker lives, along with PAINT, POINT, GET/PUT sprites and palette animation; examples 9 to 12 and the dice roller in [`examples/`](examples/README.md) show them off. If this is what the library does with no sketchpad, imagine what it does with one.
 
 Wire two screens, set `examples/board.h`, flash `qg4p_showcase`.
 

@@ -118,7 +118,7 @@ int main(void)
     /* 3: a centred line wider than the screen. Measure it, make the screen
      * 3 pixels narrower, and the room left over is -3: centring puts it at
      * floor(-3 / 2) = -2, two pixels hanging off the left and one off the
-     * right, just as +3 of room puts 1 pixel left of the text and 2 right. */
+     * right, the way +3 of room puts 1 pixel left of the text and 2 right. */
     const char *line = "Centre me, please";
     int16_t tw = 0, th = 0;
     mk(&s0, W, H);

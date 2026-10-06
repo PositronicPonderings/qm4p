@@ -165,7 +165,7 @@ The things that go wrong, and why:
 - **The program's name must be the same everywhere** it appears: `add_executable(my_app ...)`, `target_link_libraries(my_app ...)`, and so on. A mismatch gives "not built by this project", CMake's way of saying you've introduced it to a stranger.
 - **Every `.c` file must be listed** in `add_executable`. A missing one gives "undefined reference" when linking, naming something from that file.
 - **After adding a file or a target, configure again** (*Configure CMake*). CMake only reads `CMakeLists.txt` when configuring.
-- Several programs in one project are just several `add_executable` blocks, each with its own name. That's how this repository builds 17 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
+- Several programs in one project are several `add_executable` blocks, each with its own name. That's how this repository builds 17 examples at once (`examples/CMakeLists.txt` wraps it in a small function).
 
 **Changing a setting** from `qg_config.h`: put it on the library, marked `PUBLIC`, so the library and your program agree on its value:
 

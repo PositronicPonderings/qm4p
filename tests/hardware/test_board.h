@@ -28,7 +28,7 @@
 /*  Which board is screen B?                                                  */
 /* ========================================================================== */
 /* Screen B can be either of two boards. They share every pin, so swapping
- * one for the other is just this one line (and a rebuild).                  */
+ * one for the other is this one line (and a rebuild).                  */
 #define SCREEN_B_ILI9341  1   /* 2.8" red board,  240 x 320                  */
 #define SCREEN_B_ST7796   2   /* 3.5" blue board, 320 x 480                  */
 

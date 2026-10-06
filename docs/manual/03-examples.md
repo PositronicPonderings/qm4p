@@ -275,8 +275,12 @@ Look at the ramp straight on, in the light the device will live in, next to a sh
 
 `qg4p_showcase` · [`showcase.c`](../../examples/showcase.c) · screens A and B, both DIRECT
 
-Both screens become one wide picture, with the gap between them in its rightful place, and about 30 seconds of scenes run on a loop: the title fading in, a pattern of lines, rings and arcs, a ball bouncing from one screen to the other behind the gap, a message scrolling across both, a dice roll, and a closing card. At power-up it writes LEFT and RIGHT on the screens for 3 seconds: if they're the wrong way round, change `BOARD_LEFT_SCREEN` in `board.h`. Set `BOARD_GAP_PX` to the gap between your screens, measured in the left screen's pixels; `board.h` says how.
+Both screens become one wide picture, gap included, and about 30 seconds of scenes run on a loop: the title fading in; a pattern of lines, rings and arcs; a ball bouncing from one screen to the other, behind the gap; a message scrolling across both; a dice roll; and a closing card.
 
-Worth reading for three ideas: small helpers that draw at "world" coordinates on whichever screen a shape touches (the library clips anything off the edge, text included); scenes driven by frame numbers, with only `main()` keeping time; and moving things on DIRECT screens without flicker, such as a ball erased by a background-coloured halo drawn round it. The README's pictures are made from it with `python3 tools/make_readme_images.py`.
+**First, tell it where your screens are.** At power-up it writes LEFT and RIGHT on them for 3 seconds. Screens have no idea where you put them, so if the words are the wrong way round, change `BOARD_LEFT_SCREEN` in `board.h`. Then set `BOARD_GAP_PX` to the gap between them, in the left screen's pixels; `board.h` says how to measure it, and near enough is fine.
+
+Everything here is drawn on plain DIRECT screens, with no framebuffer. That's a choice, not a limit: examples 9 to 12 show what a framebuffer adds.
+
+Worth reading for three ideas: helpers that draw at "world" coordinates on whichever screen a shape touches (the library clips anything off the edge, text included); scenes driven by frame numbers, with only `main()` keeping time; and moving things on DIRECT screens without flicker, such as a ball erased by a background-coloured halo drawn around it. The README's pictures are made from it with `python3 tools/make_readme_images.py`.
 
 <br clear="right">

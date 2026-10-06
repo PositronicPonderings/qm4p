@@ -47,7 +47,7 @@
 #define PAGE_MS 4000
 
 /* Draw one page on both screens, report how long each took, and leave it
- * up for PAGE_MS. (The step line itself is printed by main(), just before.) */
+ * up for PAGE_MS. (The step line itself is printed by main(), right before.) */
 typedef void (*page_fn)(qg_screen_t *s);
 
 static void run_page(page_fn draw)
