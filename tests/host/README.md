@@ -27,6 +27,7 @@ Needs gcc, Python 3, Pillow and numpy. Each check prints PASS or FAIL; logs are 
 | ai_disclosure | Every source file carries an `SPDX-AI-Disclosure` tag with a valid level, and `AI_DISCLOSURE.md` exists |
 | quick_reference | The one-page quick reference names every public function, and nothing that doesn't exist |
 | golden_images | Every rendered page and example screen (95 in all, the showcase stills included) matches its recorded SHA-256 fingerprint |
+| showcase_still | While the showcase's dice lie still and its closing card is up, nothing is sent to the screens except the two things that appear (the total, the card). A finished picture can be right while being redrawn every frame, which flickers on real glass; `render_example.c` counts what's sent per frame (`DRAWS=first:last`) |
 | test_board_only | The hardware tests' settings live in one place: no file but `tests/hardware/test_board.h` defines `SCREEN_B_BOARD` or a `PIN_` setting |
 | serial_format | Every hardware test prints through `tests/hardware/test_log.h`: one tagged line per step, under 100 characters, steps 1/N to N/N, each pass ending and repeating; and `run_all.sh` lists the same steps (`check_serial.py`) |
 

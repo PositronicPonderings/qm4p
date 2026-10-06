@@ -35,7 +35,7 @@
  *
  *     A few small helpers (w_box, w_line, w_print...) take WORLD
  *     coordinates and draw on whichever screen, or both, the shape touches.
- *     Anything in the gap simply isn't drawn, like a real object passing
+ *     Anything in the gap isn't drawn, like a real object passing
  *     behind the bezel. Screens of different heights are centred against
  *     each other, so their middles line up.
  *
@@ -57,7 +57,7 @@
  *  of those passes through a single gateway that trims it to the screen in
  *  32-bit arithmetic. So any shape may hang off any edge, at negative
  *  coordinates too, as long as its numbers fit an int16_t (-32768..32767).
- *  The world helpers lean on that: they just move the shape into each
+ *  The world helpers lean on that: they move the shape into each
  *  screen's own coordinates and let the library cut it off.
  *
  *  Text goes through the same gateway, one glyph at a time, so it's cut off
@@ -164,7 +164,7 @@ static void world_setup(void)
 
 /* Does the world rectangle x1..x2, y1..y2 (inclusive) touch this screen? A
  * quick test to skip screens a shape can't reach. (Drawing it anyway would
- * be harmless, since the library clips, just slower.)                     */
+ * be harmless, since the library clips, only slower.)                     */
 static bool touches(const panel_t *p, int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
     return x2 >= p->x0 && x1 < p->x0 + p->w && y2 >= p->y0 && y1 < p->y0 + p->h;
@@ -321,7 +321,7 @@ static void startup_check(void)
 /* ========================================================================== */
 /*
  * The backlights start dark and fade in over a second, on a starry sky that
- * spans both screens (stars "in the gap" just aren't drawn). Then the title
+ * spans both screens (stars "in the gap" aren't drawn). Then the title
  * appears a line at a time on each screen: markup for colours and fonts,
  * and alignment left, centre and right. Last, a shooting star crosses from
  * one screen to the other, its path carrying straight on through the gap.
@@ -444,7 +444,7 @@ static void scene_shapes(int frame)
             qg_circle_pct(s, 50, 50, r, rainbow(k * 3, 72), (k % 4 == 3) ? QG_BLACK : QG_TRANSPARENT);
             qg_screen_set_line_width(s, 1);
         } else if (frame <= 100) {
-            /* 36 arcs of 10 degrees: a rainbow ring just outside the rings. */
+            /* 36 arcs of 10 degrees: a rainbow ring around the rings. */
             int k = frame - 65;                       /* 0..35 */
             int16_t r = qg_pct_r(s, 44);
             qg_screen_set_line_width(s, 8);
@@ -610,8 +610,18 @@ static void scene_scroll(int frame)
  * Moving it on a DIRECT screen: the parts of last frame's die that the new
  * one won't cover (strips above, below and to the sides, and the four
  * rounded-off corners) are painted back to the table colour, then the new
- * die goes on top. Pixels that stay white are just sent white again, so the
- * die itself never blinks; only the pips change.
+ * die goes on top. Pixels that stay white are sent white again, so the body
+ * holds steady while it moves; the pips and corners blink a little, which
+ * reads as tumbling.
+ *
+ * Once a die stops, it isn't drawn again. Redrawing a die that hasn't moved
+ * still paints its corners green and its pips white before putting them
+ * back, and 30 times a second that's a flicker on a die that's supposed to
+ * be lying still. So a die is drawn only when its position, width or face
+ * has changed since the last frame. (Every finished picture was right all
+ * along, which is all a PC renderer looks at; it took real glass to show
+ * the die drawing itself twice. The host check showcase_still now counts
+ * what's sent while a scene sits still.)
  */
 #define DIE_SIZE     96
 #define DICE_SETTLE  84           /* the frame the dice come to rest */
@@ -670,7 +680,7 @@ static void scene_dice(int frame)
 {
     static qg_color_t felt;
     static rect16_t   last[2];
-    static int        face[2], final[2];
+    static int        face[2], final[2], last_face[2];
     char buf[40];
 
     if (frame == 0) {
@@ -712,8 +722,13 @@ static void scene_dice(int frame)
             face[i] = final[i];
         }
         int16_t cy = (int16_t)(floor_y - hh - lift);
-        draw_die(p->s, cx, cy, hw, hh, face[i], felt, &last[i]);
-        last[i] = (rect16_t){ (int16_t)(cx - hw), (int16_t)(cy - hh), (int16_t)(cx + hw), (int16_t)(cy + hh) };
+        rect16_t now = { (int16_t)(cx - hw), (int16_t)(cy - hh), (int16_t)(cx + hw), (int16_t)(cy + hh) };
+        if (now.x1 != last[i].x1 || now.y1 != last[i].y1 || now.x2 != last[i].x2 ||
+            now.y2 != last[i].y2 || face[i] != last_face[i]) {    /* anything changed? */
+            draw_die(p->s, cx, cy, hw, hh, face[i], felt, &last[i]);
+            last[i] = now;
+            last_face[i] = face[i];
+        }
 
         if (frame == DICE_SETTLE + 18) {     /* the total, under each die */
             snprintf(buf, sizeof buf, "{f:1}Roll: %d + %d = {c:YELLOW}%d", final[0], final[1], final[0] + final[1]);
@@ -809,7 +824,7 @@ int main(void)
      * next slot starts; after drawing a frame, sleep for whatever is left
      * of its slot. Counting from a fixed start (next += FRAME_US) rather
      * than "sleep 33 ms after each frame" keeps small errors from adding
-     * up. A frame that runs over its slot just makes the next one start
+     * up. A frame that runs over its slot only makes the next one start
      * late; the clock then restarts from now, rather than rushing the
      * frames after it to catch up.
      */

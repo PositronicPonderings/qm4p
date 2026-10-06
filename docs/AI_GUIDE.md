@@ -36,7 +36,7 @@ examples/        17 examples, each its own target qg4p_<name>; wiring in example
                  (two-screen layout: BOARD_LEFT_SCREEN, BOARD_GAP_PX; qg4p_showcase uses them)
 tests/hardware/  milestone test programs qg4p_test_m0..m8, qg4p_test_new_commands; settings in
                  test_board.h, serial lines via test_log.h; run_all.sh flashes each in turn
-tests/host/      PC tests: sh tests/host/run_tests.sh  (22 checks, gcc + python3 + Pillow + numpy)
+tests/host/      PC tests: sh tests/host/run_tests.sh  (23 checks, gcc + python3 + Pillow + numpy)
 tools/           ttf2qg.py, img2bmp8.py, mkpack.py, size_report.py, size_audit.py, make_readme_images.py
 docs/manual/     the manual;  docs/RESOURCES.md  hardware resource register (SPI, DMA, PWM, flash plan)
 ```

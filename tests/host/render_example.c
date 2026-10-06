@@ -12,6 +12,12 @@
  * sleep_ms() from first to last, as <out_prefix>_NNNN_a.ppm and _b.ppm
  * (NNNN = the call's number), for animations. An example that sleeps once
  * per frame, like the showcase, gives one picture per frame.
+ *
+ * DRAWS=first:last prints, for each call to sleep_ms() from first to last,
+ * how many drawing operations reached the screens since the call before:
+ * "draws NNNN COUNT" on stderr. A finished picture can be right while the
+ * program keeps redrawing it, which flickers on a real DIRECT screen; this
+ * is how a host test sees that.
  */
 #include <setjmp.h>
 #include <stdio.h>
@@ -32,13 +38,13 @@ qg_font_t font_small = QG_FONT_INIT(qg_font_mono_12,      QG_DEFAULT, 1);
 /* Panels are stored row by row at the screen's CURRENT width, so a rotated
  * (sideways) screen is stored the right way round.                          */
 static uint16_t panel_a[BOARD_A_HEIGHT * BOARD_A_WIDTH], panel_b[BOARD_B_HEIGHT * BOARD_B_WIDTH];
-static int has_b; static long oob;
+static int has_b; static long oob, draws;
 static uint16_t *px(qg_screen_t *s, int x, int y) { return (s == &screen_a ? panel_a : panel_b) + y * s->width + x; }
 static void dff(qg_screen_t *s, int16_t x, int16_t y, int16_t w, int16_t h, qg_color_t c)
-{ if (x < 0 || y < 0 || x + w > s->width || y + h > s->height) { oob++; return; }
+{ draws++; if (x < 0 || y < 0 || x + w > s->width || y + h > s->height) { oob++; return; }
   for (int j = y; j < y + h; j++) for (int i = x; i < x + w; i++) *px(s, i, j) = s->palette[c]; }
 static void dwr(qg_screen_t *s, int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *p)
-{ if (x < 0 || y < 0 || x + w > s->width || y + h > s->height) { oob++; return; }
+{ draws++; if (x < 0 || y < 0 || x + w > s->width || y + h > s->height) { oob++; return; }
   for (int j = 0; j < h; j++) for (int i = 0; i < w; i++) *px(s, x + i, y + j) = p[j * w + i]; }
 static const qg_backend_t direct = { .name = "DIRECT", .fill_rect = dff, .write_rgb565 = dwr };
 
@@ -52,7 +58,7 @@ void qg_driver_set_window(qg_hal_device_t *d, uint16_t x0, uint16_t y0, uint16_t
 { (void)d; (void)y1; wx0 = x0; wx1 = x1; wcx = x0; wcy = y0; }
 void qg_hal_stream_begin(qg_hal_device_t *d) { (void)d; }
 void qg_hal_stream_pixels(qg_hal_device_t *d, const uint16_t *p, uint32_t n)
-{ (void)d; for (uint32_t i = 0; i < n; i++) { *px(cur, wcx, wcy) = p[i]; if (++wcx > wx1) { wcx = wx0; wcy++; } } }
+{ (void)d; draws++; for (uint32_t i = 0; i < n; i++) { *px(cur, wcx, wcy) = p[i]; if (++wcx > wx1) { wcx = wx0; wcy++; } } }
 void qg_hal_stream_end(qg_hal_device_t *d) { (void)d; }
 void qg_screen_flush(qg_screen_t *s) { if (s->backend->flush) s->backend->flush(s); }
 void qg_screen_flush_all(qg_screen_t *s) { if (!s->fb) return; qg_int_dirty_all(s); s->backend->flush(s); }
@@ -98,11 +104,13 @@ static void load_pack(void)
 
 /* ---- stopping the example (and saving frames on the way, see FRAMES) ---- */
 static jmp_buf done; static long sleeps, stop_at; static uint64_t fake_us;
-static long f_first, f_last, f_step; static const char *f_prefix;
+static long f_first, f_last, f_step, d_first, d_last = -1; static const char *f_prefix;
 static void dump_both(const char *prefix, const char *sep);
 void sleep_ms(uint32_t ms)
 {
     fake_us += (uint64_t)ms * 1000u; ++sleeps;
+    if (sleeps >= d_first && sleeps <= d_last) fprintf(stderr, "draws %04ld %ld\n", sleeps, draws);
+    draws = 0;
     if (f_step > 0 && sleeps >= f_first && sleeps <= f_last && (sleeps - f_first) % f_step == 0) {
         char p[160]; snprintf(p, sizeof p, "%s_%04ld", f_prefix, sleeps); dump_both(p, "_");
     }
@@ -150,6 +158,7 @@ int main(int argc, char **argv)
     const char *prefix = argc > 2 ? argv[2] : "out";
     f_prefix = prefix;
     if (getenv("FRAMES") && sscanf(getenv("FRAMES"), "%ld:%ld:%ld", &f_first, &f_last, &f_step) != 3) f_step = 0;
+    if (getenv("DRAWS") && sscanf(getenv("DRAWS"), "%ld:%ld", &d_first, &d_last) != 2) d_last = -1;
     load_pack();
     if (!setjmp(done)) example_main();
     dump_both(prefix, "_");

@@ -97,6 +97,12 @@ check render_pages      sh -c 'rm -f *.ppm; for r in render_m2 render_m3 render_
 check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted &&
                                while read n stop rest; do case $n in ""|"#"*) continue ;; esac; ./r_showcase $stop showcase_$n > showcase_$n.log || exit 1; done < ../../showcase_stills.txt'
 check golden_images     sh -c 'sha256sum -c ../golden.sha256 --quiet'
+# A finished picture can be right while the program keeps redrawing it, which
+# flickers on a real DIRECT screen. The showcase's dice settle at sleep 746
+# and their scene ends at 811; the closing card runs 812-961 (sleep numbers
+# as in showcase_stills.txt). While they sit still, exactly two frames may
+# draw: the dice total (764) and the closing card's first frame (812).
+check showcase_still    sh -c 'cd ex && DRAWS=747:961 ./r_showcase 961 still 2>&1 >/dev/null | awk "/^draws/ && \$3 > 0 { n++; print } END { exit n != 2 }"'
 check manual_examples   python3 ../doc_examples.py --check
 check manual_links      python3 ../doc_links.py
 check ai_disclosure     python3 ../check_disclosure.py
