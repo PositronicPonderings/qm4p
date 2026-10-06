@@ -102,14 +102,14 @@ Three ways to wire two screens, all tested against the rule above. Choose by whe
 | DC | GP4 | 6 | | Backlight A | GP8 | 11 |
 | RST | GP5 | 7 | | Backlight B | GP9 | 12 |
 
-**B. All on the right side** (SPI0, high pins): the layout this library was developed on, with screen B's backlight moved to the right side too.
+**B. On the right side** (SPI0, high pins): the layout this library was developed on, and the one `examples/board.h` and the hardware tests use. Everything is on the right side except screen B's backlight, GP15 on pin 20, directly across from pin 21; that keeps GP26 to GP28 free for analogue readings.
 
 | Wire | GP | Pin | | Wire | GP | Pin |
 |---|---|---|---|---|---|---|
 | SCK | GP18 | 24 | | CS screen A | GP17 | 22 |
 | MOSI | GP19 | 25 | | CS screen B | GP22 | 29 |
 | DC | GP20 | 26 | | Backlight A | GP16 | 21 |
-| RST | GP21 | 27 | | Backlight B | GP26 | 31 |
+| RST | GP21 | 27 | | Backlight B | GP15 | 20 |
 
 **C. Two separate buses** (SPI0 and SPI1): each screen has its own wires, so each keeps its own speed without the bus switching between them. More wires; worth it if the screens are far apart, or one is much slower than the other.
 
