@@ -43,3 +43,4 @@ qg4p_example(dashboard)                 # 13  gauges and readouts
 qg4p_example(dice_roller)               # 14  the game one
 qg4p_example(colour_check)              # 15  colour test pattern
 qg4p_example(calibrate)                 # 16  colour calibration over USB serial
+qg4p_example(showcase)                  # 17  two screens as one: everything at a glance

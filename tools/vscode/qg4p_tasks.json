@@ -52,6 +52,7 @@
         "examples/qg4p_dice_roller",
         "examples/qg4p_colour_check",
         "examples/qg4p_calibrate",
+        "examples/qg4p_showcase",
         "tests/hardware/qg4p_test_m0",
         "tests/hardware/qg4p_test_m1",
         "tests/hardware/qg4p_test_m2",
