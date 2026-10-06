@@ -4,25 +4,42 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m6.c
- * @brief   Milestone 6 test: images (8-bit BMP, RLE8), transparency,
+ * @brief   Hardware test M6: images (8-bit BMP, RLE8), transparency,
  *          scaling and fitting.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m6.uf2).
+ * WHAT IT CHECKS
+ *   Drawing 8-bit BMP images, plain and RLE8-compressed, compiled into the
+ *   program (test_images.c): at their own size, with and without
+ *   transparency, scaled up and down, stretched, fitted into boxes without
+ *   distortion, and clipped at every edge, with each draw timed.
  *
- * PAGES
- *   1  1:1        the landscape and banner at their own size; the d20 over a
- *                 checkerboard with and without QG_IMAGE_TRANSPARENT
- *   2  Scaling    pixel art at x2, x4, x8; a stretched and a squashed d20;
- *                 the landscape at half size
- *   3  Fit        the landscape fitted into a wide, a tall and a square box,
- *                 aligned left, centre and right
- *   4  Speed      timed draws, and images hanging off the screen edges
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h, both DIRECT. A
+ *   USB serial terminal shows the steps and the timings.
+ *
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   (At start, serial lists the five images, each "OK".)
+ *   1  1:1      the banner and the landscape; the left d20 over a
+ *               checkerboard, with the squares showing through its corners;
+ *               the right d20 on a MAGENTA square (its transparency flag was
+ *               deliberately left off)
+ *   2  Scaling  crisp, blocky potions at 1, 2, 4 and 8 times; a stretched and
+ *               a squashed d20; the landscape at half size
+ *   3  Fit      the landscape never distorted: left, centre and right in the
+ *               wide boxes, centred in the tall and square ones
+ *   4  Speed    serial gives each draw's time; d20s hanging off all four
+ *               corners are cut off cleanly (the stretched landscape and oval
+ *               sun are intended)
+ *
+ * Program: qg4p_test_m6 (build/tests/hardware/qg4p_test_m6.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
 #include "test_images.h"
+#define TEST_TAG "M6"
+#include "test_log.h"
 
 static qg_font_t f_body = QG_FONT_INIT(qg_font_sans_16, QG_DEFAULT, 1);
 static qg_font_t f_mono = QG_FONT_INIT(qg_font_mono_12, QG_DEFAULT, 1);
@@ -37,7 +54,7 @@ static void open_or_report(qg_image_t *img, const uint8_t *data, uint32_t size,
                            uint8_t flags, const char *name)
 {
     qg_err_t err = qg_image_open(img, data, size, flags);
-    printf("  %-10s %3d x %3d  %s  %lu bytes  %s\n", name, img->width, img->height,
+    TEST_DETAIL("%-13s %3d x %3d  %s  %4lu bytes  %s", name, img->width, img->height,
            img->rle ? "RLE8 " : "plain", (unsigned long)size,
            err == QG_OK ? "OK" : "FAILED");
 }
@@ -118,19 +135,19 @@ static void page_speed(qg_screen_t *s, const char *name)
 
     qg_cls(s, QG_BLACK);
     t = time_us_64(); qg_image_draw(s, &landscape, 0, 0);
-    printf("  %-6s landscape 1:1 (240x160):       %6lu us\n", name, (unsigned long)(time_us_64() - t));
+    TEST_DETAIL("%s: landscape 1:1 (240x160):       %6lu us", name, (unsigned long)(time_us_64() - t));
 
     t = time_us_64(); qg_image_draw_scaled(s, &landscape, 0, 0, w, h);
-    printf("  %-6s landscape full screen:         %6lu us\n", name, (unsigned long)(time_us_64() - t));
+    TEST_DETAIL("%s: landscape full screen:         %6lu us", name, (unsigned long)(time_us_64() - t));
 
     t = time_us_64(); qg_image_draw_scaled(s, &banner, 0, 0, w, 48);
-    printf("  %-6s banner, screen width:          %6lu us\n", name, (unsigned long)(time_us_64() - t));
+    TEST_DETAIL("%s: banner, screen width:          %6lu us", name, (unsigned long)(time_us_64() - t));
 
     t = time_us_64(); qg_image_draw(s, &d20, (int16_t)(w / 2 - 32), (int16_t)(h / 2 - 32));
-    printf("  %-6s d20 1:1, transparent:          %6lu us\n", name, (unsigned long)(time_us_64() - t));
+    TEST_DETAIL("%s: d20 1:1, transparent:          %6lu us", name, (unsigned long)(time_us_64() - t));
 
     t = time_us_64(); qg_image_draw_scaled(s, &d20, (int16_t)(w / 2 - 64), (int16_t)(h / 2 + 40), 128, 128);
-    printf("  %-6s d20 x2, transparent:           %6lu us\n", name, (unsigned long)(time_us_64() - t));
+    TEST_DETAIL("%s: d20 x2, transparent:           %6lu us", name, (unsigned long)(time_us_64() - t));
 
     /* Images hanging off every edge: must be cut off cleanly. */
     qg_image_draw(s, &d20, -32, -20);
@@ -142,9 +159,9 @@ static void page_speed(qg_screen_t *s, const char *name)
 /* ========================================================================== */
 int main(void)
 {
-    test_setup("Dice Roller qg4p - Milestone 6");
+    test_setup(TEST_TAG, "qg4p_test_m6: images 1:1, scaled, fitted and clipped");
 
-    printf("\nOpening images:\n");
+    TEST_LOG("Opening the images:");
     open_or_report(&d20,        img_d20,       img_d20_size,       QG_IMAGE_TRANSPARENT, "d20");
     open_or_report(&d20_opaque, img_d20,       img_d20_size,       0,                     "d20 (no flag)");
     open_or_report(&potion,     img_potion,    img_potion_size,    QG_IMAGE_TRANSPARENT, "potion");
@@ -153,26 +170,25 @@ int main(void)
 
     for (int i = 0; i < 2; i++) qg_screen_set_font(screens[i], 0, &f_body);
 
-    while (true) {
-        printf("\n--- Page 1: images at 1:1 ---\n");
-        printf("  Look for: banner and landscape; left d20 over the checkerboard,\n"
-               "  right d20 on a MAGENTA square (the flag was left off).\n");
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
+
+        TEST_STEP(1, 4, "1:1", "banner, landscape, two d20s", "the right d20 on MAGENTA (no flag)");
         for (int i = 0; i < 2; i++) page_one_to_one(screens[i]);
         sleep_ms(5000);
 
-        printf("\n--- Page 2: scaling ---\n");
-        printf("  Look for: crisp, blocky potions; a wide and a tall d20.\n");
+        TEST_STEP(2, 4, "Scaling", "potions x1 to x8, stretched d20s", "crisp, blocky pixels");
         for (int i = 0; i < 2; i++) page_scaling(screens[i]);
         sleep_ms(5000);
 
-        printf("\n--- Page 3: fit ---\n");
-        printf("  Look for: the landscape never distorted, left/centre/right in\n"
-               "  the wide boxes, centred in the tall and square ones.\n");
+        TEST_STEP(3, 4, "Fit", "the landscape in 5 boxes", "no distortion; left, centre, right");
         for (int i = 0; i < 2; i++) page_fit(screens[i]);
         sleep_ms(5000);
 
-        printf("\n--- Page 4: speed and clipping ---\n");
+        TEST_STEP(4, 4, "Speed", "timed draws, d20s off each corner", "clean cuts at all 4 corners");
         for (int i = 0; i < 2; i++) page_speed(screens[i], names[i]);
         sleep_ms(4000);
+
+        TEST_PASS_DONE();
     }
 }

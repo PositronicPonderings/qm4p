@@ -4,29 +4,43 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m8.c
- * @brief   Milestone 8 test: the framebuffer (BUF8) backend.
+ * @brief   Hardware test M8: the framebuffer (BUF8) backend.
  *
- * Screen A stays DIRECT; screen B becomes BUF8, so the two can
- * be compared side by side.
+ * WHAT IT CHECKS
+ *   Screen A stays DIRECT and screen B becomes a BUF8 framebuffer screen,
+ *   so the two can be compared side by side: the same animation flickering
+ *   on one and not the other, whole-scene redraws, PAINT and POINT (which
+ *   need a framebuffer), palette animation, and scrolling, each timed.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m8.uf2).
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h. Screen B's
+ *   framebuffer takes 150 KB of RAM (320 x 480 bytes; the 2.8" board uses
+ *   the first 240 x 320 of it). A USB serial terminal shows the steps.
  *
- * PAGES
- *   1  Flicker      the same bouncing-dice code on both screens: DIRECT
- *                   flickers, BUF8 doesn't
- *   2  Full scene   BUF8 only: the whole picture redrawn every frame, with
- *                   the image's own colours loaded into the palette
- *   3  Paint        qg_paint flood fills and qg_point on BUF8; both refuse
- *                   politely on DIRECT
- *   4  Palette      rainbow rings that move by changing 30 palette entries
- *                   per frame, without redrawing a single pixel
- *   5  Scroll       a log scrolling on both screens, timed
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   (At start, serial lists screen B as BUF8 and times one full flush.)
+ *   1  Flicker     bouncing dice, the same code on both screens: they
+ *                  flicker on A (DIRECT) and are solid on B (BUF8), even
+ *                  where dice overlap. Serial compares the time per frame.
+ *   2  Full scene  B redraws the landscape, the dice and a frame counter
+ *                  every frame with no flashing, in the landscape's own
+ *                  colours. Serial splits draw and flush time.
+ *   3  Paint       on B, circle and box regions fill one by one in different
+ *                  colours, then the background turns grey, and POINT reads
+ *                  "BLUE, WHITE"; A reports QG_ERR_UNSUPPORTED and QG_NONE
+ *   4  Palette     rainbow rings on B flowing outward smoothly, without a
+ *                  pixel redrawn; serial gives frames per second
+ *   5  Scroll      a log scrolling on both screens; serial compares times
+ *
+ * Program: qg4p_test_m8 (build/tests/hardware/qg4p_test_m8.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
 #include "test_images.h"
+#define TEST_TAG "M8"
+#include "test_log.h"
 
 /* Screen B's framebuffer: one byte per pixel. Sized for the 3.5"
  * board; the 2.8" board simply uses the first 240 x 320 bytes of it.       */
@@ -75,9 +89,7 @@ static void sprite_move(sprite_t *p, const qg_screen_t *s, int16_t top)
 static void page_flicker(void)
 {
     sprite_t sp[2][N_DICE];
-    printf("\n--- Page 1: flicker ---\n");
-    printf("  Look for: dice flickering on screen A (DIRECT) screen, solid on the\n"
-           "  screen B (BUF8) screen. Same drawing code on both.\n");
+    TEST_STEP(1, 5, "Flicker", "bouncing dice on both screens", "flicker on A (DIRECT), none on B");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_t *s = screens[i];
@@ -115,7 +127,7 @@ static void page_flicker(void)
             t_screen[i] += time_us_64() - t0;
         }
     }
-    printf("  screen A (DIRECT): %lu us per frame    Screen B (BUF8, incl. flush): %lu us per frame\n",
+    TEST_DETAIL("A (DIRECT) %lu us per frame, B (BUF8, with flush) %lu us per frame",
            (unsigned long)(t_screen[0] / PAGE1_FRAMES), (unsigned long)(t_screen[1] / PAGE1_FRAMES));
 }
 
@@ -127,7 +139,7 @@ static void page_full_scene(void)
     sprite_t sp[N_DICE];
     const int16_t w = qg_screen_width(s), h = qg_screen_height(s);
 
-    printf("\n--- Page 2: full-scene animation (BUF8) ---\n");
+    TEST_STEP(2, 5, "Full scene", "B redraws everything per frame", "no flashing, the true colours");
     title(&scr_a, "Full scene");
     qg_println(&scr_a, "Screen B redraws its WHOLE picture every "
                          "frame: background, dice, text. On a DIRECT screen that "
@@ -136,7 +148,7 @@ static void page_full_scene(void)
     /* Give the landscape its exact colours: copy its palette into the
      * screen's, from entry 16 up (0..15 stay the named colours).            */
     int n = qg_palette_load_image(s, &landscape, 16);
-    printf("  loaded %d landscape colours into screen B palette\n", n);
+    TEST_DETAIL("loaded %d landscape colours into screen B's palette", n);
     sprites_init(sp, N_DICE, s);
 
     uint64_t t_draw = 0, t_flush = 0;
@@ -156,7 +168,7 @@ static void page_full_scene(void)
         t_flush += time_us_64() - t1;
     }
     unsigned long per = (unsigned long)((t_draw + t_flush) / PAGE2_FRAMES);
-    printf("  per frame: draw %lu us + flush %lu us = %lu us (%lu fps)\n",
+    TEST_DETAIL("per frame: draw %lu us + flush %lu us = %lu us (%lu fps)",
            (unsigned long)(t_draw / PAGE2_FRAMES), (unsigned long)(t_flush / PAGE2_FRAMES),
            per, per ? 1000000ul / per : 0ul);
     qg_palette_reset(s);
@@ -171,7 +183,7 @@ static void page_paint(void)
     const int16_t w = qg_screen_width(s);
     char buf[80];
 
-    printf("\n--- Page 3: qg_paint and qg_point ---\n");
+    TEST_STEP(3, 5, "Paint", "flood fills on B, refusals on A", "regions filling one by one");
     title(s, "{f:1}PAINT");
 
     /* Outlines only: a circle split by lines, a box with slanted walls. */
@@ -207,7 +219,7 @@ static void page_paint(void)
             qg_err_t e = qg_paint(s, gx, gy, cols[filled % 10], QG_WHITE);
             uint64_t us = time_us_64() - t0;
             qg_screen_flush(s);
-            printf("  fill %d at (%d,%d): %s in %lu us\n", filled + 1, gx, gy,
+            TEST_DETAIL("fill %d at (%d,%d): %s in %lu us", filled + 1, gx, gy,
                    e == QG_OK ? "OK" : "error", (unsigned long)us);
             filled++;
             sleep_ms(300);
@@ -264,7 +276,7 @@ static void page_palette(void)
     qg_screen_t *s = &scr_b;
     const int16_t cx = qg_screen_width(s) / 2, cy = qg_screen_height(s) / 2;
 
-    printf("\n--- Page 4: palette animation ---\n");
+    TEST_STEP(4, 5, "Palette", "rainbow rings on B", "rings flowing outward, none redrawn");
     title(&scr_a, "Palette animation");
     qg_println(&scr_a, "The rings on screen B are drawn ONCE. Each "
                          "frame only changes 30 palette entries, and the flush "
@@ -288,7 +300,7 @@ static void page_palette(void)
         qg_screen_flush(s);     /* a palette change marks the whole screen */
     }
     unsigned long per = (unsigned long)((time_us_64() - t0) / PAGE4_FRAMES);
-    printf("  %lu us per frame (%lu fps), no pixels redrawn\n", per, per ? 1000000ul / per : 0ul);
+    TEST_DETAIL("%lu us per frame (%lu fps), no pixels redrawn", per, per ? 1000000ul / per : 0ul);
     qg_palette_reset(s);
 }
 
@@ -297,7 +309,7 @@ static void page_palette(void)
 /* ========================================================================== */
 static void page_scroll(void)
 {
-    printf("\n--- Page 5: scrolling ---\n");
+    TEST_STEP(5, 5, "Scroll", "a log on both screens", "both logs scrolling cleanly");
     char buf[48];
     for (int i = 0; i < 2; i++) {
         qg_screen_t *s = screens[i];
@@ -308,7 +320,7 @@ static void page_scroll(void)
             qg_println(s, buf);
             qg_screen_flush(s);    /* BUF8: show each line as it's printed */
         }
-        printf("  %-6s 40 lines in %lu ms\n", qg_screen_is_buffered(s) ? "BUF8" : "DIRECT",
+        TEST_DETAIL("%-6s 40 lines in %lu ms", qg_screen_is_buffered(s) ? "BUF8" : "DIRECT",
                (unsigned long)((time_us_64() - t0) / 1000));
     }
     sleep_ms(2000);
@@ -317,7 +329,7 @@ static void page_scroll(void)
 /* ========================================================================== */
 int main(void)
 {
-    test_setup_ex("Dice Roller qg4p - Milestone 8", fb_b, sizeof fb_b);
+    test_setup_ex(TEST_TAG, "qg4p_test_m8: the framebuffer (BUF8) on screen B", fb_b, sizeof fb_b);
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);
@@ -330,13 +342,15 @@ int main(void)
     /* A full-screen flush on its own, for reference. */
     uint64_t t0 = time_us_64();
     qg_screen_flush_all(&scr_b);
-    printf("Full-screen flush: %lu us\n", (unsigned long)(time_us_64() - t0));
+    TEST_LOG("Full-screen flush: %lu us", (unsigned long)(time_us_64() - t0));
 
-    while (true) {
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
         page_flicker();
         page_full_scene();
         page_paint();
         page_palette();
         page_scroll();
+        TEST_PASS_DONE();
     }
 }

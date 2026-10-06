@@ -9,7 +9,8 @@
 #  all of them: build/tests/hardware/qg4p_test_m0.uf2 ... qg4p_test_m8.uf2. To try a
 #  different one, flash a different .uf2; no CMake editing needed.
 #
-#  Wiring and board choice: test_setup.c (M2 onward) and docs/WIRING.md.
+#  Wiring, board choice and panel settings: test_board.h (and docs/WIRING.md).
+#  Serial output: one tagged line per step, in the format of test_log.h.
 #  To flash and check every one in turn: sh tests/hardware/run_all.sh
 # ---------------------------------------------------------------------------
 

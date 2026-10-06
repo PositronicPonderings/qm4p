@@ -4,27 +4,42 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_new_commands.c
- * @brief   Test of the commands added for the public release: VIEW, LINE
- *          styles, PRESET, CSRLIN/POS (screen A, DIRECT) and GET/PUT
+ * @brief   Hardware test of the commands added for the public release: VIEW,
+ *          LINE styles, PRESET, CSRLIN/POS (screen A, DIRECT) and GET/PUT
  *          (screen B, framebuffer).
  *
- * Built by tests/hardware/CMakeLists.txt as its own target
- * (qg4p_test_new_commands.uf2).
+ * WHAT IT CHECKS
+ *   QuickBasic's VIEW (a clip-only view, and one that moves the origin so a
+ *   panel can be laid out in percentages of itself), LINE's style patterns
+ *   at any width, GET and PUT in their PSET, TRANSPARENT and XOR modes,
+ *   PRESET, and the cursor readouts POS and CSRLIN.
  *
- * PAGES
- *   1  VIEW      a clip-only view cutting shapes off, and a moved-origin
- *                panel laid out in percentages of itself
- *   2  Styles    dashed, dotted and dash-dot lines and boxes, thin and thick
- *   3  GET/PUT   (screen B) a sprite captured with GET, stamped with PSET and
- *                TRANSPARENT, then slid across a busy background with XOR,
- *                which restores the background exactly as it moves
- *   4  PRESET    a dotted line erased point by point; CSRLIN/POS readouts
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h. Screen A is
+ *   DIRECT; screen B is a framebuffer screen (150 KB of RAM), which GET
+ *   needs. A USB serial terminal shows the steps.
+ *
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   1  VIEW      on A: a circle and lines cut off at a clip-only view's
+ *                edges; a panel laid out in its own percentages; text in a
+ *                view wrapping at the view's edge and cut off at its bottom
+ *   2  Styles    on A: dashed, dotted and dash-dot lines, thin and thick; a
+ *                dashed diagonal; a styled box outline
+ *   3  GET/PUT   on B: a d20 stamped with PSET (square), TRANSPARENT (just
+ *                the die) and XOR, then slid across a busy background with
+ *                XOR, which leaves the background exactly as it was
+ *   4  PRESET    on A: a dotted line erased point by point; POS and CSRLIN
+ *                readouts on two lines
+ *
+ * Program: qg4p_test_new_commands (build/tests/hardware/qg4p_test_new_commands.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
 #include "test_images.h"
+#define TEST_TAG "NEW"
+#include "test_log.h"
 
 static uint8_t fb_b[320 * 480];
 
@@ -40,7 +55,7 @@ static void page_view(void)
     qg_screen_t *s = &scr_a;
     const int16_t w = qg_screen_width(s), h = qg_screen_height(s);
 
-    printf("\n--- Page 1: VIEW ---\n");
+    TEST_STEP(1, 4, "VIEW", "shapes clipped by views on A", "nothing drawn outside a view");
     qg_view_reset(s);
     qg_cls(s, QG_BLACK);
     qg_print_at(s, 4, 2, "{f:1}VIEW", QG_DEFAULT, NULL);
@@ -82,7 +97,7 @@ static void page_styles(void)
     static const uint16_t styles[] = { 0xF0F0, 0xAAAA, 0xFF18, 0xFFF0, 0xCCCC };
     static const char *names[]     = { "F0F0 dashed", "AAAA dotted", "FF18 dash-dot", "FFF0 long", "CCCC short" };
 
-    printf("\n--- Page 2: LINE styles ---\n");
+    TEST_STEP(2, 4, "Styles", "styled lines and boxes on A", "even dashes, thin and thick");
     qg_cls(s, QG_BLACK);
     qg_print_at(s, 4, 2, "{f:1}LINE styles", QG_DEFAULT, NULL);
     for (int i = 0; i < 5; i++) {
@@ -115,7 +130,7 @@ static void page_getput(void)
     static uint8_t sprite[QG_BLOCK_BYTES(SPRITE, SPRITE)];     /* black background */
     static uint8_t cutout[QG_BLOCK_BYTES(SPRITE, SPRITE)];     /* see-through one  */
 
-    printf("\n--- Page 3: GET/PUT (screen B, framebuffer) ---\n");
+    TEST_STEP(3, 4, "GET/PUT", "a sprite on B, slid with XOR", "the background intact behind it");
 
     /* Draw the d20 on black and GET it. Two versions are useful:
      *   sprite  keeps black (index 0) around the die. For XOR that's ideal:
@@ -127,7 +142,7 @@ static void page_getput(void)
     for (int i = 0; i < (int)sizeof sprite; i++) {
         cutout[i] = (i >= 4 && sprite[i] == QG_BLACK) ? 255 : sprite[i];
     }
-    printf("  qg_get: %s\n", e == QG_OK ? "OK" : "error");
+    TEST_DETAIL("qg_get: %s", e == QG_OK ? "OK" : "error");
 
     /* A busy background, so the modes show their differences. */
     qg_cls(s, QG_BLACK);
@@ -158,7 +173,7 @@ static void page_getput(void)
         qg_put(s, x, y, sprite, QG_PUT_XOR);        /* erase */
     }
     qg_screen_flush(s);
-    printf("  XOR slide: %d frames, %lu us per frame (incl. 8 ms pause)\n",
+    TEST_DETAIL("XOR slide: %d frames, %lu us per frame (incl. 8 ms pause)",
            frames, (unsigned long)((time_us_64() - t0) / (uint64_t)frames));
 }
 
@@ -169,7 +184,7 @@ static void page_preset(void)
     const int16_t w = qg_screen_width(s);
     char buf[48];
 
-    printf("\n--- Page 4: PRESET, CSRLIN/POS ---\n");
+    TEST_STEP(4, 4, "PRESET", "a dotted line erased on A", "every dot gone; POS/CSRLIN shown");
     qg_screen_set_colors(s, QG_WHITE, QG_BLACK);
     qg_cls(s, QG_BLACK);
     qg_print_at(s, 4, 2, "{f:1}PRESET", QG_DEFAULT, NULL);
@@ -188,13 +203,13 @@ static void page_preset(void)
     qg_print(s, "Next line: ");
     snprintf(buf, sizeof buf, "POS=%d CSRLIN=%d", qg_pos(s), qg_csrlin(s));
     qg_println(s, buf);
-    printf("  %s\n", buf);
+    TEST_DETAIL("%s", buf);
 }
 
 /* ========================================================================== */
 int main(void)
 {
-    test_setup_ex("QG4P - new commands", fb_b, sizeof fb_b);
+    test_setup_ex(TEST_TAG, "qg4p_test_new_commands: VIEW, LINE styles, GET/PUT, PRESET", fb_b, sizeof fb_b);
     qg_screen_t *screens[2] = { &scr_a, &scr_b };
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);
@@ -203,10 +218,12 @@ int main(void)
     }
     qg_image_open(&d20, img_d20, img_d20_size, QG_IMAGE_TRANSPARENT);
 
-    while (true) {
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
         page_view();    sleep_ms(4000);
         page_styles();  sleep_ms(4000);
         page_getput();  sleep_ms(1500);
         page_preset();  sleep_ms(3000);
+        TEST_PASS_DONE();
     }
 }

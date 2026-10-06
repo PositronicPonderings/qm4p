@@ -4,41 +4,56 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m2.c
- * @brief   Milestone 2 test: palette functions and the QuickBasic primitives,
- *          as a gallery of pages shown on both screens.
+ * @brief   Hardware test M2: the QuickBasic drawing primitives and the
+ *          palette, as a gallery of pages on both screens.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m2.uf2).
+ * WHAT IT CHECKS
+ *   Lines (thin and thick), boxes, circles, ellipses and arcs, outlines and
+ *   fills, line widths drawn inward, picking colours by RGB, changing a
+ *   palette entry, and clipping at every edge. Every size is worked out from
+ *   each screen's width and height, so the same code fills the 240 x 320 and
+ *   320 x 480 screens sensibly. Serial gives the time each page took to draw
+ *   on each screen.
  *
- * PAGES (about 4 seconds each; the serial monitor says what to look for and
- * how long each page took to draw on each screen)
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h, both DIRECT (no
+ *   framebuffer). A USB serial terminal shows the steps.
  *
- *   1  Lines       Starburst of thin lines, then widths 1..8
- *   2  Boxes       Outline / filled / both, at three line widths
- *   3  Circles     Outline, filled, both, thick rings, concentric rings
- *   4  Arcs        An animated "dial" gauge, plus quarter-circle arcs
- *   5  Palette     qg_color_from_rgb() swatches and qg_palette_set()
- *   6  Clipping    Shapes hanging off every edge
+ * WHAT TO LOOK FOR, STEP BY STEP (about 4 seconds each; then they repeat)
+ *   1  Lines     a starburst of thin lines with no gaps at the centre, then
+ *                widths 1 to 8, growing evenly
+ *   2  Boxes     columns outline / filled / both; rows at widths 1, 3, 6,
+ *                drawn inward so every box has the same outer size
+ *   3  Circles   round shapes, outlines hugging their fills with no gaps;
+ *                an ellipse with a thick outline; even concentric rings
+ *   4  Arcs      a dial gauge filling clockwise, green to yellow to red;
+ *                four coloured quarter arcs meeting in a circle; a thick
+ *                three-quarter arc open at the top right
+ *   5  Palette   six RGB swatches, a smooth grey ramp, and two bars drawn
+ *                with the same palette index: bar A GREY, bar B GOLD
+ *   6  Clipping  shapes hanging off every edge, cut off cleanly, with
+ *                nothing wrapping round to the other side
  *
- * All sizes are worked out from each screen's width and height, so the same
- * code fills the 240x320 and 320x480 screens sensibly.
+ * Program: qg4p_test_m2 (build/tests/hardware/qg4p_test_m2.uf2).
  */
 #include <stdio.h>
 #include <math.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
+#define TEST_TAG "M2"
+#include "test_log.h"
 
 #define PAGE_MS 4000
 
-/* Time how long drawing a page takes on one screen, and report it. */
+/* Draw one page on both screens, report how long each took, and leave it
+ * up for PAGE_MS. (The step line itself is printed by main(), just before.) */
 typedef void (*page_fn)(qg_screen_t *s);
 
-static void run_page(const char *title, const char *look_for, page_fn draw)
+static void run_page(page_fn draw)
 {
-    printf("\n--- %s ---\n  Look for: %s\n", title, look_for);
-
     qg_screen_t *screens[2] = { &scr_a, &scr_b };
-    const char   *names[2]   = { "A", "B" };
+    uint64_t     us[2];
 
     for (int i = 0; i < 2; i++) {
         qg_screen_t *s = screens[i];
@@ -47,10 +62,11 @@ static void run_page(const char *title, const char *look_for, page_fn draw)
 
         uint64_t t0 = time_us_64();
         draw(s);
-        uint64_t us = time_us_64() - t0;
-        printf("  %-6s drawn in %lu.%lu ms\n", names[i],
-               (unsigned long)(us / 1000), (unsigned long)((us % 1000) / 100));
+        us[i] = time_us_64() - t0;
     }
+    TEST_DETAIL("drawn in A %lu.%lu ms, B %lu.%lu ms",
+                (unsigned long)(us[0] / 1000), (unsigned long)((us[0] % 1000) / 100),
+                (unsigned long)(us[1] / 1000), (unsigned long)((us[1] % 1000) / 100));
     sleep_ms(PAGE_MS);
 }
 
@@ -196,7 +212,7 @@ static void page_palette(qg_screen_t *s)
     for (int i = 0; i < 6; i++) {
         qg_color_t c = qg_color_from_rgb(rgb[i][0], rgb[i][1], rgb[i][2], s->palette);
         if (s == &scr_a) {
-            printf("  RGB(%3u,%3u,%3u) -> index %u\n",
+            TEST_DETAIL("RGB(%3u,%3u,%3u) -> index %u",
                    rgb[i][0], rgb[i][1], rgb[i][2], (unsigned)c);
         }
         qg_box(s, (int16_t)(i * sw + 2), 4, (int16_t)((i + 1) * sw - 3), (int16_t)(h / 5),
@@ -250,26 +266,22 @@ static void page_clipping(qg_screen_t *s)
 /* ========================================================================== */
 int main(void)
 {
-    test_setup("Dice Roller qg4p - Milestone 2");
+    test_setup(TEST_TAG, "qg4p_test_m2: lines, boxes, circles, arcs, palette, clipping");
 
-    while (true) {
-        run_page("Page 1: lines",
-                 "starburst with no gaps at the centre; widths 1..8 growing evenly",
-                 page_lines);
-        run_page("Page 2: boxes",
-                 "columns: outline / filled / both. Rows: widths 1, 3, 6, drawn inward",
-                 page_boxes);
-        run_page("Page 3: circles",
-                 "round shapes; outlines hug the fills with no gaps; even thick rings",
-                 page_circles);
-        run_page("Page 4: arcs",
-                 "gauge fills clockwise green -> yellow -> red; four quarters make a circle",
-                 page_arcs);
-        run_page("Page 5: palette",
-                 "6 RGB swatches, smooth grey ramp; bar A GREY and bar B GOLD",
-                 page_palette);
-        run_page("Page 6: clipping",
-                 "shapes cut off cleanly at every edge, nothing wrapping around",
-                 page_clipping);
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
+        TEST_STEP(1, 6, "Lines", "starburst, widths 1-8", "no gaps at the centre, even widths");
+        run_page(page_lines);
+        TEST_STEP(2, 6, "Boxes", "outline/filled/both, widths 1,3,6", "every box the same outer size");
+        run_page(page_boxes);
+        TEST_STEP(3, 6, "Circles", "outlines, fills, thick rings", "round, outlines hugging fills");
+        run_page(page_circles);
+        TEST_STEP(4, 6, "Arcs", "a dial filling, 4 quarter arcs", "green-yellow-red, quarters meeting");
+        run_page(page_arcs);
+        TEST_STEP(5, 6, "Palette", "RGB swatches, grey ramp, 2 bars", "bar A GREY and bar B GOLD");
+        run_page(page_palette);
+        TEST_STEP(6, 6, "Clipping", "shapes off every edge", "clean cuts, nothing wrapping round");
+        run_page(page_clipping);
+        TEST_PASS_DONE();
     }
 }

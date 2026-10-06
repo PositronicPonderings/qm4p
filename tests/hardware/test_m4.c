@@ -4,23 +4,37 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m4.c
- * @brief   Milestone 4 test: fonts and printing.
+ * @brief   Hardware test M4: fonts and printing.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m4.uf2).
+ * WHAT IT CHECKS
+ *   The three built-in fonts, scaling, the extra symbols, what a missing
+ *   character looks like; transparent text over a shape; opaque text for
+ *   numbers that change (timed against erase-and-redraw); and the print
+ *   cursor, QuickBasic's LOCATE and PRINT, with margins.
  *
- * PAGES
- *   1  Fonts      The three built-in fonts, scaling, symbols, and what a
- *                 missing character looks like
- *   2  Opaque     Text on a banner (transparent), then a fast-changing
- *                 counter drawn two ways, timed: erase-and-redraw versus
- *                 opaque text
- *   3  Cursor     LOCATE / PRINT style output: a roll log with margins,
- *                 print_at() for a status corner, and a centred result
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h, both DIRECT. A
+ *   USB serial terminal shows the steps and the timings.
+ *
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   1  Fonts    three fonts, clean and readable; scale 2; the symbols
+ *               ° ± ×; descenders (g j p q y) dropping below the line; the
+ *               euro sign, which these fonts don't have, shown as "?"
+ *   2  Opaque   white text on a blue banner; two counters both reaching 200
+ *               cleanly, with no leftover digits. Serial gives the time per
+ *               update for each method; the opaque one should be faster.
+ *   3  Cursor   a "Roll log" heading over an indented list (20s green, 1s
+ *               red), "Two lines / from one call" lined up with the list,
+ *               HP in the top-right corner, a big centred number in a box
+ *
+ * Program: qg4p_test_m4 (build/tests/hardware/qg4p_test_m4.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
+#define TEST_TAG "M4"
+#include "test_log.h"
 
 /* Fonts: data + default colour + scale. Static, because screens keep
  * pointers to them.                                                         */
@@ -119,7 +133,7 @@ static void page_opaque(qg_screen_t *s, const char *name)
     uint64_t t_opaque = time_us_64() - t0;
     qg_screen_set_text_bg(s, QG_TRANSPARENT);
 
-    printf("  %-6s erase+redraw: %lu us per update   opaque: %lu us per update\n",
+    TEST_DETAIL("%s: erase+redraw %lu us per update, opaque %lu us per update",
            name, (unsigned long)(t_erase / (COUNTER_STEPS + 1)),
            (unsigned long)(t_opaque / (COUNTER_STEPS + 1)));
 }
@@ -179,37 +193,35 @@ static void page_cursor(qg_screen_t *s)
 /* ========================================================================== */
 int main(void)
 {
-    test_setup("Dice Roller qg4p - Milestone 4");
+    test_setup(TEST_TAG, "qg4p_test_m4: fonts, opaque text, the print cursor");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_sans);
     }
 
-    while (true) {
-        printf("\n--- Page 1: fonts ---\n");
-        printf("  Look for: three fonts, scale 2, the symbols ° ± ×, a '?' for\n"
-               "  the missing euro sign, descenders (g j p q y) below the line.\n");
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
+
+        TEST_STEP(1, 3, "Fonts", "3 fonts, scale 2, symbols", "° ± ×, '?' for the euro, descenders");
         for (int i = 0; i < 2; i++) {
             uint64_t t0 = time_us_64();
             page_fonts(screens[i]);
-            printf("  %-6s drawn in %lu us\n", names[i], (unsigned long)(time_us_64() - t0));
+            TEST_DETAIL("%s: drawn in %lu us", names[i], (unsigned long)(time_us_64() - t0));
         }
         sleep_ms(5000);
 
-        printf("\n--- Page 2: transparent and opaque text ---\n");
-        printf("  Look for: white text on the blue banner; both counters\n"
-               "  counting to 200 cleanly (the opaque one should be faster).\n");
+        TEST_STEP(2, 3, "Opaque", "banner text, two counters", "both reaching 200 cleanly");
         for (int i = 0; i < 2; i++) {
             page_opaque(screens[i], names[i]);
         }
         sleep_ms(3000);
 
-        printf("\n--- Page 3: print cursor ---\n");
-        printf("  Look for: an indented roll log (20s green, 1s red), 'Two lines'\n"
-               "  aligned with the list, HP in the corner, a centred big number.\n");
+        TEST_STEP(3, 3, "Cursor", "a roll log, HP corner, a big result", "the list lined up, number centred");
         for (int i = 0; i < 2; i++) {
             page_cursor(screens[i]);
         }
         sleep_ms(5000);
+
+        TEST_PASS_DONE();
     }
 }

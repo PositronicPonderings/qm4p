@@ -18,15 +18,19 @@ qg_bus_t    bus;
 qg_screen_t scr_a;
 qg_screen_t scr_b;
 
+/* The test's tag, "M2" and so on, for the start of every line printed here
+ * (the tests themselves print through test_log.h, which knows their tag).  */
+static const char *s_tag = "?";
+
 static void halt(const char *msg, int err)
 {
-    printf("%s (error %d)\n", msg, err);
+    printf("[%s] %s (error %d): check the wiring and test_board.h\n", s_tag, msg, err);
     while (true) tight_loop_contents();
 }
 
 static void print_screen_info(const char *label, const qg_screen_t *s)
 {
-    printf("%-7s %-8s %3d x %3d  SPI %8lu Hz  %s\n", label, s->drv->name,
+    printf("[%s] Screen %s: %-8s %3d x %3d  SPI %8lu Hz  %s\n", s_tag, label, s->drv->name,
            qg_screen_width(s), qg_screen_height(s),
            (unsigned long)s->dev.hz_actual, s->backend->name);
 }
@@ -38,13 +42,14 @@ static void print_screen_info(const char *label, const qg_screen_t *s)
  * framebuffer code. (It used to be the other way round, test_setup() calling
  * test_setup_ex(), which quietly put 5 KB of framebuffer into every test.)
  */
-static void setup(const char *title, const struct qg_backend *backend_b,
+static void setup(const char *tag, const char *about, const struct qg_backend *backend_b,
                   uint8_t *fb_b, uint32_t fb_b_size)
 {
     stdio_init_all();   /* USB serial: waits up to 2 s for a terminal to connect
                            (PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS, set in
                            CMakeLists.txt), then carries on without one     */
-    printf("\n=== %s ===\n", title);
+    s_tag = tag;
+    printf("\n[%s] %s\n", tag, about);   /* a blank line, then the test's name */
 
     /* --- Shared bus --------------------------------------------------------- */
     static const int8_t all_cs[] = { PIN_CS_A, PIN_CS_B };
@@ -70,7 +75,7 @@ static void setup(const char *title, const struct qg_backend *backend_b,
         .text_history = history_a, .text_history_lines = QG_TEXT_HISTORY_LINES,
     };
     err = qg_screen_init(&scr_a, &bus, &cfg_a);
-    if (err != QG_OK) halt("screen A init FAILED", err);
+    if (err != QG_OK) halt("Screen A init FAILED", err);
 
     /* --- Screen B --------------------------------------------------------- */
     /* Either board (SCREEN_B_BOARD in test_board.h): the settings follow. */
@@ -96,12 +101,12 @@ static void setup(const char *title, const struct qg_backend *backend_b,
     print_screen_info("B", &scr_b);
 }
 
-void test_setup(const char *title)
+void test_setup(const char *tag, const char *about)
 {
-    setup(title, QG_BACKEND_DIRECT, NULL, 0);
+    setup(tag, about, QG_BACKEND_DIRECT, NULL, 0);
 }
 
-void test_setup_ex(const char *title, uint8_t *fb_b, uint32_t fb_b_size)
+void test_setup_ex(const char *tag, const char *about, uint8_t *fb_b, uint32_t fb_b_size)
 {
-    setup(title, fb_b ? QG_BACKEND_BUF8 : QG_BACKEND_DIRECT, fb_b, fb_b_size);
+    setup(tag, about, fb_b ? QG_BACKEND_BUF8 : QG_BACKEND_DIRECT, fb_b, fb_b_size);
 }

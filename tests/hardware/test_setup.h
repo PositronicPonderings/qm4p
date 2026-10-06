@@ -16,20 +16,31 @@
 #include "qg4p.h"
 
 extern qg_bus_t    bus;
-extern qg_screen_t scr_a;       /* 2.0" ST7789                         */
-extern qg_screen_t scr_b;   /* 2.8" ILI9341 or 3.5" ST7796S        */
+extern qg_screen_t scr_a;       /* 2.0" ST7789                              */
+extern qg_screen_t scr_b;       /* 3.5" ST7796S or 2.8" ILI9341             */
 
 /**
- * Start USB serial (waiting up to 2 s for a terminal), bring up the bus and both screens,
- * and print their details. Halts with a message if anything fails.
+ * Start USB serial (waiting up to 2 s for a terminal), bring up the bus and
+ * both screens, and print the test's opening lines in the test_log.h
+ * format: what it covers, then each screen.
+ *
+ *     test_setup(TEST_TAG, "qg4p_test_m2: lines, boxes, circles, ...");
+ *
+ * prints
+ *
+ *     [M2] qg4p_test_m2: lines, boxes, circles, ...
+ *     [M2] Screen A: ST7789   240 x 320  SPI 37500000 Hz  DIRECT
+ *     [M2] Screen B: ST7796S  320 x 480  SPI 37500000 Hz  DIRECT
+ *
+ * Halts with a message if anything fails.
  */
-void test_setup(const char *title);
+void test_setup(const char *tag, const char *about);
 
 /**
  * Like test_setup(), but makes screen B a framebuffer (BUF8)
  * screen using the buffer you pass in (at least width x height bytes).
  * Pass NULL for an ordinary DIRECT screen B.
  */
-void test_setup_ex(const char *title, uint8_t *fb_b, uint32_t fb_b_size);
+void test_setup_ex(const char *tag, const char *about, uint8_t *fb_b, uint32_t fb_b_size);
 
 #endif /* TEST_SETUP_H */

@@ -12,7 +12,7 @@ static void put(qg_screen_t*s,int x,int y,uint16_t p){int k=(s==&scr_a)?0:1; fb[
 static void ff(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t c){ if(x<0||y<0||x+w>s->width||y+h>s->height||c>254) oob++; for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++)put(s,i,j,s->palette[c]);}
 static void wr(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,const uint16_t*px){ if(x<0||y<0||x+w>s->width||y+h>s->height){oob++;return;} for(int j=0;j<h;j++)for(int i=0;i<w;i++)put(s,x+i,y+j,px[j*w+i]);}
 static const qg_backend_t tb={.name="T",.fill_rect=ff,.write_rgb565=wr};
-void test_setup(const char*t){(void)t;}
+void test_setup(const char*t,const char*a){(void)t;(void)a;}
 void sleep_ms(uint32_t m){(void)m;} static uint64_t ft; uint64_t time_us_64(void){return ft+=5;}
 void qg_screen_set_line_width(qg_screen_t *s, uint8_t w){ s->line_width = w<1?1:w; }
 void qg_screen_set_colors(qg_screen_t *s, qg_color_t fg, qg_color_t bg){ if(fg<=254)s->fg_color=fg; if(bg<=254)s->bg_color=bg; }

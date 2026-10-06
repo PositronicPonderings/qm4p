@@ -4,43 +4,59 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m0.c
- * @brief   Milestone 0 test: bring up the 2.0" ST7789 on the shared bus.
+ * @brief   Hardware test M0: bring up screen A, the 2.0" ST7789, on the
+ *          shared bus.
  *
- * WHAT IT CHECKS (watch the screen and the USB serial monitor)
+ * WHAT IT CHECKS
+ *   That the library can start one screen and talk to it: the panel
+ *   settings (colour inversion, red/blue order, mirroring), the orientation
+ *   and RAM offsets in all four rotations, clipping at an edge, and how fast
+ *   a whole screen can be filled. It's the first test to run on a new board.
+ *   The setup is spelled out step by step below, on purpose, rather than
+ *   hidden in test_setup.c: this is the program to read to see how a
+ *   screen comes to life.
  *
- *   Test 1 - Named colours
- *     Clears the screen to each of the 16 QuickBasic colours in turn and
- *     prints the expected name over USB serial. Use it to tune the panel:
- *       - First colour is WHITE, not BLACK?     -> flip A_INVERT
- *       - RED looks BLUE and BLUE looks RED?    -> flip A_BGR
+ * HARDWARE
+ *   Screen A (2.0" ST7789, 240 x 320) on the shared SPI bus, wired as in
+ *   test_board.h. Screen B can be connected or not: its CS pin is held high,
+ *   so it ignores everything. A USB serial terminal shows the steps.
  *
- *   Test 2 - Orientation and offsets (all four rotations)
- *     Draws a 1-pixel white border (all four edges must be visible; a
- *     missing edge means the panel offsets are wrong) and coloured corner
- *     squares:
- *            RED ........ GREEN
- *             .   (cyan)   .      <- cyan bar marks the TOP edge
- *             .            .
- *            BLUE ....... YELLOW
- *     If the corners are swapped left/right, the panel is mirrored: flip
- *     A_MIRROR_X. If swapped top/bottom, flip A_MIRROR_Y.
+ * WHAT TO LOOK FOR, STEP BY STEP (then the steps repeat)
+ *   1  Colours      Screen A clears to each of the 16 QuickBasic colours,
+ *                   1 second each, while serial names it.
+ *                     - First colour WHITE, not BLACK?      -> flip A_INVERT
+ *                     - RED looks BLUE and BLUE looks RED?  -> flip A_BGR
+ *   2  Orientation  In each rotation, for 3 seconds: a 1-pixel white border
+ *                   (all four edges must show; a missing edge means the
+ *                   panel offsets are wrong) and coloured corner squares:
+ *                          RED ........ GREEN
+ *                           .   (cyan)   .      <- cyan bar marks the TOP
+ *                           .            .
+ *                          BLUE ....... YELLOW
+ *                   Corners swapped left/right: flip A_MIRROR_X; swapped
+ *                   top/bottom: flip A_MIRROR_Y. A magenta square hanging
+ *                   off the right edge shows only its left half, with
+ *                   nothing wrapping round to the left side: clipping works.
+ *   3  Speed        32 full-screen clears through the colour cube. Serial
+ *                   gives the time per clear: about 33 ms at 37.5 MHz.
+ *   The settings to flip (A_INVERT and the rest) are in test_board.h.
  *
- *   Test 3 - Fill speed
- *     Times 32 full-screen clears through the colour cube and reports the
- *     milliseconds per clear and the theoretical frames per second.
- *
- * SERIAL OUTPUT
+ * SERIAL OUTPUT (one line per step, in the format set by test_log.h)
  *   Keep a terminal open: VS Code's serial monitor, or `tio /dev/ttyACM0`,
  *   which reconnects by itself each time the Pico restarts. At start-up the
  *   program waits up to 2 seconds for a terminal to connect, and starts at
- *   once when one does; with none, it starts anyway. The tests loop
+ *   once when one does; with none, it starts anyway. The steps loop
  *   forever, so a late terminal sees everything on the next pass.
+ *
+ * Program: qg4p_test_m0 (build/tests/hardware/qg4p_test_m0.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "qg_internal.h"   /* test-only: raw rectangle fill until M2's qg_box() */
 #include "test_board.h"    /* the pins, SPI speed and panel settings          */
+#define TEST_TAG "M0"
+#include "test_log.h"      /* the serial line format                          */
 
 static qg_bus_t    bus;
 static qg_screen_t scr_a;
@@ -50,9 +66,9 @@ static const char *const rot_names[4] = { "0", "90", "180", "270" };
 /* -------------------------------------------------------------------------- */
 static void test_named_colors(void)
 {
-    printf("\n--- Test 1: named colours (1 s each) ---\n");
+    TEST_STEP(1, 3, "Colours", "the 16 named colours, 1 s each", "BLACK first, RED really red");
     for (qg_color_t c = QG_BLACK; c <= QG_WHITE; c++) {
-        printf("  %2u  %s\n", (unsigned)c, qg_color_name(c));
+        TEST_DETAIL("%2u  %s", (unsigned)c, qg_color_name(c));
         qg_cls(&scr_a, c);
         sleep_ms(1000);
     }
@@ -90,14 +106,13 @@ static void draw_orientation_pattern(qg_screen_t *s)
 
 static void test_orientation(void)
 {
-    printf("\n--- Test 2: orientation (3 s each) ---\n");
-    printf("  Expect: RED top-left, GREEN top-right, BLUE bottom-left,\n");
-    printf("          YELLOW bottom-right, CYAN bar at top, white border on\n");
-    printf("          all 4 edges, magenta half-square cut off at right edge.\n");
+    TEST_STEP(2, 3, "Orientation", "corner pattern, 4 rotations", "RED top-left, all 4 edges white");
+    TEST_DETAIL("expect RED top-left, GREEN top-right, BLUE bottom-left, YELLOW bottom-right,");
+    TEST_DETAIL("a CYAN bar at the top, and a magenta square cut off at the right edge");
 
     for (int r = 0; r < 4; r++) {
         qg_screen_set_rotation(&scr_a, (qg_rotation_t)r);
-        printf("  rotation %-3s -> %d x %d  (RAM offset x=%u y=%u)\n",
+        TEST_DETAIL("rotation %-3s -> %d x %d  (RAM offset x=%u y=%u)",
                rot_names[r],
                qg_screen_width(&scr_a), qg_screen_height(&scr_a),
                (unsigned)scr_a.ram_x_off, (unsigned)scr_a.ram_y_off);
@@ -112,7 +127,7 @@ static void test_speed(void)
 {
     const int frames = 32;
 
-    printf("\n--- Test 3: full-screen fill speed ---\n");
+    TEST_STEP(3, 3, "Speed", "32 full-screen clears", "about 33 ms per clear at 37.5 MHz");
 
     uint64_t t0 = time_us_64();
     for (int i = 0; i < frames; i++) {
@@ -122,7 +137,7 @@ static void test_speed(void)
     uint64_t us = time_us_64() - t0;
 
     unsigned long us_per = (unsigned long)(us / frames);
-    printf("  %d clears in %lu us -> %lu.%02lu ms per clear, ~%lu fps\n",
+    TEST_DETAIL("%d clears in %lu us -> %lu.%02lu ms per clear, ~%lu fps",
            frames, (unsigned long)us, us_per / 1000, (us_per % 1000) / 10,
            us_per ? 1000000ul / us_per : 0ul);
 }
@@ -134,7 +149,8 @@ int main(void)
                            (PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS, set in
                            CMakeLists.txt), then carries on without one     */
 
-    printf("\n=== Dice Roller qg4p - Milestone 0 ===\n");
+    printf("\n");
+    TEST_LOG("qg4p_test_m0: screen A alone: colours, orientation, fill speed");
 
     /* --- The shared bus ---------------------------------------------------- */
     static const int8_t all_cs[] = { PIN_CS_A, PIN_CS_B };
@@ -150,7 +166,7 @@ int main(void)
     };
 
     if (qg_bus_init(&bus, &bus_cfg) != QG_OK) {
-        printf("Bus init FAILED - check the pin numbers.\n");
+        TEST_LOG("Bus init FAILED: check the pins in test_board.h");
         while (true) tight_loop_contents();
     }
 
@@ -175,22 +191,24 @@ int main(void)
 
     qg_err_t err = qg_screen_init(&scr_a, &bus, &cfg_a);
     if (err != QG_OK) {
-        printf("Screen init FAILED (error %d)\n", (int)err);
+        TEST_LOG("Screen A init FAILED (error %d): check the wiring and test_board.h", (int)err);
         while (true) tight_loop_contents();
     }
 
-    printf("Driver: %s, %d x %d, backend %s\n", scr_a.drv->name,
-           qg_screen_width(&scr_a), qg_screen_height(&scr_a),
-           scr_a.backend->name);
-    printf("SPI: requested %lu Hz, actual %lu Hz\n",
-           (unsigned long)scr_a.dev.hz_requested,
-           (unsigned long)scr_a.dev.hz_actual);
+    TEST_LOG("Screen A: %-8s %3d x %3d  SPI %8lu Hz  %s", scr_a.drv->name,
+             qg_screen_width(&scr_a), qg_screen_height(&scr_a),
+             (unsigned long)scr_a.dev.hz_actual, scr_a.backend->name);
+    TEST_DETAIL("SPI requested %lu Hz, actual %lu Hz",
+                (unsigned long)scr_a.dev.hz_requested,
+                (unsigned long)scr_a.dev.hz_actual);
 
-    /* --- Loop the tests forever -------------------------------------------- */
-    while (true) {
+    /* --- Loop the steps forever -------------------------------------------- */
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
         test_named_colors();
         test_orientation();
         test_speed();
+        TEST_PASS_DONE();
         sleep_ms(2000);
     }
 }

@@ -23,6 +23,10 @@
 #  every load. A terminal that reconnects by itself is easiest, e.g.
 #  "tio /dev/ttyACM0" in another window; minicom may need restarting after
 #  each load. The tests wait up to 2 s for a terminal before starting.
+#  Each test prints one line per step, tagged with its name, e.g.
+#    [M2] 3/6 Circles: outlines, fills, thick rings -- look for round, ...
+#  the same lines this script shows before loading it, and at the end of
+#  each pass: "[M2] Pass complete. Did every step look right?" Answer here.
 #
 #  At the end, a table of passes, fails and skips; the exit status is
 #  non-zero if anything failed or was skipped.
@@ -33,7 +37,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --pack) PACK=1 ;;
         --from) [ $# -gt 1 ] || { echo "--from needs a test name"; exit 2; }; shift; FROM="$1" ;;
-        -h|--help) sed -n '7,28p' "$0"; exit 0 ;;
+        -h|--help) sed -n '7,32p' "$0"; exit 0 ;;
         -*) echo "Unknown option: $1 (try --help)"; exit 2 ;;
         *) BUILD="$1" ;;
     esac
@@ -58,29 +62,50 @@ for t in $TESTS; do [ -f "$HW/qg4p_test_$t.uf2" ] || missing="$missing\n  $HW/qg
     missing="$missing\n  $PACKFILE  (python3 tools/mkpack.py tests/hardware/pack --out $BUILD/assets)"
 [ -z "$missing" ] || { printf 'Missing, so nothing was flashed:%b\n' "$missing"; exit 1; }
 
-# --- What to look for, from each test's own comments -------------------------
+# --- What to look for: the steps each test prints over serial -----------------
+# The same words, line for line, as each test's TEST_STEP lines (see
+# tests/hardware/test_log.h); tests/host/check_serial.py checks they match.
 about() {
     case $1 in
-    m0) echo "Screen A: the 16 colours in turn, the first BLACK, RED really red;"
-        echo "a white border on all four edges, RED top-left, GREEN top-right, cyan bar at the top." ;;
-    m1) echo "Both screens show the SAME colour at the same time, then M0's corner pattern;"
-        echo "each backlight fades while the other stays steady; clears end clean, no stripes." ;;
-    m2) echo "Pages on both screens: lines (widths 1-8), boxes, circles, an animated dial,"
-        echo "palette swatches, and shapes cut off neatly at every edge." ;;
-    m3) echo "A dice-roller layout made of percentages, upright then sideways, filling each screen;"
-        echo "then a spinning lock-style dial on both." ;;
-    m4) echo "The three fonts, scaled; text on a banner; two counters reaching 200 cleanly;"
-        echo "a roll log with margins, a status corner and a centred result." ;;
-    m5) echo "Colours and fonts changing mid-line on one baseline; wrapped, centred, right-aligned"
-        echo "text; a table lined up with tabs; a roll log scrolling up at the bottom." ;;
-    m6) echo "Images 1:1 (the d20 see-through over a checkerboard), scaled x2/x4/x8,"
-        echo "fitted into boxes, and hanging off the screen edges." ;;
-    m7) echo "From the asset pack: the file list (A) and a welcome text (B); every pack image;"
-        echo "then missing names in red, dice/d20.bmp in green. Without the pack: 'No asset pack'." ;;
-    m8) echo "Bouncing dice: A (DIRECT) flickers, B (framebuffer) doesn't; flood fills;"
-        echo "rainbow rings moved by the palette alone; a log scrolling on both." ;;
-    new_commands) echo "Shapes clipped by views; dashed and dotted lines; on B a sprite slid with XOR,"
-        echo "leaving the background intact; a dotted line erased point by point." ;;
+    m0) echo "1/3 Colours: the 16 named colours, 1 s each -- look for BLACK first, RED really red"
+        echo "2/3 Orientation: corner pattern, 4 rotations -- look for RED top-left, all 4 edges white"
+        echo "3/3 Speed: 32 full-screen clears -- look for about 33 ms per clear at 37.5 MHz" ;;
+    m1) echo "1/4 Colours: 16 colours on both screens -- look for the same colour on both at once"
+        echo "2/4 Orientation: M0's pattern on both, 4 rotations -- look for RED top-left on both"
+        echo "3/4 Brightness: each backlight fades in turn -- look for the other screen staying steady"
+        echo "4/4 Hand-over: clears alternate between screens -- look for A solid GREEN, B solid BLUE" ;;
+    m2) echo "1/6 Lines: starburst, widths 1-8 -- look for no gaps at the centre, even widths"
+        echo "2/6 Boxes: outline/filled/both, widths 1,3,6 -- look for every box the same outer size"
+        echo "3/6 Circles: outlines, fills, thick rings -- look for round, outlines hugging fills"
+        echo "4/6 Arcs: a dial filling, 4 quarter arcs -- look for green-yellow-red, quarters meeting"
+        echo "5/6 Palette: RGB swatches, grey ramp, 2 bars -- look for bar A GREY and bar B GOLD"
+        echo "6/6 Clipping: shapes off every edge -- look for clean cuts, nothing wrapping round" ;;
+    m3) echo "1/3 Layout: percent layout, upright, then sideways -- look for ticks touching each corner"
+        echo "2/3 Gauge: M2's gauge, no pauses -- look for the time per slice (M2: ~12 ms on A)"
+        echo "3/3 Dial: a marker spinning for 4 s -- look for a smooth clockwise spin on both" ;;
+    m4) echo "1/3 Fonts: 3 fonts, scale 2, symbols -- look for ° ± ×, '?' for the euro, descenders"
+        echo "2/3 Opaque: banner text, two counters -- look for both reaching 200 cleanly"
+        echo "3/3 Cursor: a roll log, HP corner, a big result -- look for the list lined up, number centred" ;;
+    m5) echo "1/4 Markup: colours, sizes, fonts mid-line -- look for one shared baseline, '{' printed"
+        echo "2/4 Wrap: a story, aligned lines, a box -- look for whole words; the box fits its text"
+        echo "3/4 Tabs: a table with tabs and {x:} -- look for straight columns"
+        echo "4/4 Scroll: 40 log lines on each screen -- look for smooth scrolling, nothing lost" ;;
+    m6) echo "1/4 1:1: banner, landscape, two d20s -- look for the right d20 on MAGENTA (no flag)"
+        echo "2/4 Scaling: potions x1 to x8, stretched d20s -- look for crisp, blocky pixels"
+        echo "3/4 Fit: the landscape in 5 boxes -- look for no distortion; left, centre, right"
+        echo "4/4 Speed: timed draws, d20s off each corner -- look for clean cuts at all 4 corners" ;;
+    m7) echo "1/3 Contents: file list on A, a text file on B -- look for 6 files listed, the welcome text"
+        echo "2/3 Images: every image, from the pack -- look for banner, landscape, 2 d20s, a potion"
+        echo "3/3 Errors: 3 names looked up on A -- look for 2 red 'not found', dice/d20.bmp OK" ;;
+    m8) echo "1/5 Flicker: bouncing dice on both screens -- look for flicker on A (DIRECT), none on B"
+        echo "2/5 Full scene: B redraws everything per frame -- look for no flashing, the true colours"
+        echo "3/5 Paint: flood fills on B, refusals on A -- look for regions filling one by one"
+        echo "4/5 Palette: rainbow rings on B -- look for rings flowing outward, none redrawn"
+        echo "5/5 Scroll: a log on both screens -- look for both logs scrolling cleanly" ;;
+    new_commands) echo "1/4 VIEW: shapes clipped by views on A -- look for nothing drawn outside a view"
+                  echo "2/4 Styles: styled lines and boxes on A -- look for even dashes, thin and thick"
+                  echo "3/4 GET/PUT: a sprite on B, slid with XOR -- look for the background intact behind it"
+                  echo "4/4 PRESET: a dotted line erased on A -- look for every dot gone; POS/CSRLIN shown" ;;
     esac
 }
 
@@ -96,7 +121,8 @@ for t in $TESTS; do
     if [ $quit = 1 ]; then table="$table\n  qg4p_test_$t\tskipped"; skip=$((skip + 1)); continue; fi
     echo
     echo "=== qg4p_test_$t ==="
-    about $t | sed 's/^/  /'
+    echo "  Steps (the serial lines say the same, as each one starts):"
+    about $t | sed 's/^/    /'
     [ $t = m7 ] && [ $PACK = 0 ] && echo "  (Reminder: M7 needs its pack loaded first: --pack, or see test_m7.c.)"
     answer=r
     while [ $answer = r ]; do
@@ -120,6 +146,6 @@ done
 
 # --- Summary -----------------------------------------------------------------
 echo
-printf 'Summary%b\n' "$table" | expand -t 24
+printf 'Summary%b\n' "$table" | expand -t 28
 echo "$pass passed, $fail failed, $skip skipped"
 [ $fail -eq 0 ] && [ $skip -eq 0 ]

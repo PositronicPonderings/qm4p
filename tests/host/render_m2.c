@@ -13,7 +13,7 @@ static void ff(qg_screen_t*s,int16_t x,int16_t y,int16_t w,int16_t h,qg_color_t 
   for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++){fb[cur][j][i][0]=r;fb[cur][j][i][1]=g;fb[cur][j][i][2]=b;}}
 static const qg_backend_t tb={.name="T",.fill_rect=ff};
 qg_bus_t bus; qg_screen_t scr_a, scr_b;
-void test_setup(const char*t){(void)t;}
+void test_setup(const char*t,const char*a){(void)t;(void)a;}
 void sleep_ms(uint32_t m){(void)m;} uint64_t time_us_64(void){return 0;}
 #define printf(...) ((void)0)
 #define main demo_main

@@ -4,25 +4,43 @@
 /* SPDX-AI-Provider: Anthropic */
 /**
  * @file    test_m5.c
- * @brief   Milestone 5 test: markup, tabs, word wrap, alignment, measuring
+ * @brief   Hardware test M5: markup, tabs, word wrap, alignment, measuring
  *          and scrolling.
  *
- * Built by tests/hardware/CMakeLists.txt as its own target (qg4p_test_m5.uf2).
+ * WHAT IT CHECKS
+ *   Markup tags changing colour, font and size inside one line (all on one
+ *   shared baseline), "{{" and unknown tags; word wrap at the right edge;
+ *   centred and right-aligned lines; measuring text to size a box; tab stops
+ *   and {x:} columns; and QuickBasic-style scrolling when printing runs past
+ *   the bottom of a DIRECT screen.
  *
- * PAGES
- *   1  Markup     colours by name and number, font and size changes inside
- *                 one line (all on one baseline), "{{", unknown tags
- *   2  Wrap       a wrapped paragraph; centred and right-aligned lines; a
- *                 box sized with qg_text_measure(), filled with
- *                 qg_print_box()
- *   3  Tabs       a small table lined up with \t and with {x:}
- *   4  Scroll     a roll log printed past the bottom so it scrolls,
- *                 QuickBasic style, with the time per scroll reported
+ * HARDWARE
+ *   Screens A and B on the shared bus, as in test_board.h, both DIRECT. A
+ *   USB serial terminal shows the steps and the timings.
+ *
+ * WHAT TO LOOK FOR, STEP BY STEP (then they repeat)
+ *   1  Markup   coloured words by name and number; "BIG" and the big green
+ *               "20" sitting on the same baseline as the small text around
+ *               them; mono and bold words mid-line; "{like this}" printed
+ *               with its brace and the nonsense tag invisible; cyan carried
+ *               over a line break, then plain text on the next call
+ *   2  Wrap     the story wrapped at whole words, the red words in place; a
+ *               centred and a right-aligned line; a blue box that fits its
+ *               wrapped, centred message. Serial gives the measured size.
+ *   3  Tabs     a 4-column table lined up with tabs; two rows lined up with
+ *               {x:}
+ *   4  Scroll   40 log lines: the screen scrolls up line by line, grey labels
+ *               and coloured results intact, no gaps at the top. Serial
+ *               gives the time per line.
+ *
+ * Program: qg4p_test_m5 (build/tests/hardware/qg4p_test_m5.uf2).
  */
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "qg4p.h"
 #include "test_setup.h"
+#define TEST_TAG "M5"
+#include "test_log.h"
 
 static qg_font_t f_body  = QG_FONT_INIT(qg_font_sans_16,      QG_DEFAULT, 1);
 static qg_font_t f_title = QG_FONT_INIT(qg_font_sans_bold_24, QG_YELLOW,  1);
@@ -100,7 +118,7 @@ static void page_wrap(qg_screen_t *s)
     qg_screen_set_line_width(s, 1);
     qg_print_box(s, bx, (int16_t)(y + 6), col_w, msg, QG_ALIGN_CENTER);
 
-    printf("  measured %d x %d px at a width of %d\n", tw, th, col_w);
+    TEST_DETAIL("measured %d x %d px at a width of %d", tw, th, col_w);
     (void)h;
 }
 
@@ -152,14 +170,14 @@ static void page_scroll(qg_screen_t *s, const char *name)
         qg_println(s, buf);
     }
     uint64_t us = time_us_64() - t0;
-    printf("  %-6s %d lines (most of them scrolling) in %lu ms, ~%lu ms per line\n",
+    TEST_DETAIL("%s: %d lines (most scrolling) in %lu ms, ~%lu ms per line",
            name, LOG_LINES, (unsigned long)(us / 1000), (unsigned long)(us / 1000 / LOG_LINES));
 }
 
 /* ========================================================================== */
 int main(void)
 {
-    test_setup("Dice Roller qg4p - Milestone 5");
+    test_setup(TEST_TAG, "qg4p_test_m5: markup, wrap, alignment, tabs, scrolling");
 
     for (int i = 0; i < 2; i++) {
         qg_screen_set_font(screens[i], 0, &f_body);
@@ -167,21 +185,25 @@ int main(void)
         qg_screen_set_font(screens[i], 2, &f_mono);
     }
 
-    while (true) {
-        printf("\n--- Page 1: markup ---\n");
+    for (int pass = 0; ; pass++) {
+        if (pass > 0) TEST_REPEAT();
+
+        TEST_STEP(1, 4, "Markup", "colours, sizes, fonts mid-line", "one shared baseline, '{' printed");
         for (int i = 0; i < 2; i++) page_markup(screens[i]);
         sleep_ms(6000);
 
-        printf("\n--- Page 2: wrap, alignment, measuring ---\n");
+        TEST_STEP(2, 4, "Wrap", "a story, aligned lines, a box", "whole words; the box fits its text");
         for (int i = 0; i < 2; i++) page_wrap(screens[i]);
         sleep_ms(6000);
 
-        printf("\n--- Page 3: tabs and columns ---\n");
+        TEST_STEP(3, 4, "Tabs", "a table with tabs and {x:}", "straight columns");
         for (int i = 0; i < 2; i++) page_tabs(screens[i]);
         sleep_ms(5000);
 
-        printf("\n--- Page 4: scrolling ---\n");
+        TEST_STEP(4, 4, "Scroll", "40 log lines on each screen", "smooth scrolling, nothing lost");
         for (int i = 0; i < 2; i++) page_scroll(screens[i], names[i]);
         sleep_ms(4000);
+
+        TEST_PASS_DONE();
     }
 }
