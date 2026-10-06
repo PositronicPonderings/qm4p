@@ -35,6 +35,7 @@ check() {   # check <name> <command...>   (run inside build/)
 echo "Building..."
 build test_text_units   test_text_units.c $L/qg_draw.c $L/qg_draw_pct.c $L/qg_palette.c
 build test_line_widths  test_line_widths.c $L/qg_draw.c
+build test_text_edges   test_text_edges.c $BASE
 build test_scroll       test_scroll.c $BASE
 build imgtest           imgtest.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c
 build test_assets       test_assets.c $A/qa4p.c $L/qg_image.c $L/qg_draw.c $L/qg_palette.c $H/demo_images.c
@@ -77,6 +78,7 @@ cp test_images.py test_images_delta.py $B/
 echo "Running..."
 check text_units        ./test_text_units
 check line_widths       ./test_line_widths
+check text_edges        ./test_text_edges
 check scroll_exact      ./test_scroll
 check images_vs_pillow  sh -c 'python3 test_images.py < cases.txt'
 check images_rle_delta  python3 test_images_delta.py

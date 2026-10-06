@@ -31,6 +31,20 @@ int main(void)
     d.kern_dsc = &kc; d.kern_classes = 1; d.kern_scale = 32;
     EXPECT(kerning(&d,1,1), 6, "kern classes (1,1)");   EXPECT(kerning(&d,2,1), -24, "kern classes (2,1)");
     EXPECT(kerning(&d,1,2), -16, "kern classes (1,2)"); EXPECT(kerning(&d,3,1), 0, "kern classes (3,1) none");
+    /* Kerning values are signed, and kern_scale/16 rarely divides evenly:
+     * -3 x 8 / 16 = -1.5 must round DOWN to -2, as +1.5 rounds down to +1. */
+    static const int8_t cv2[] = { -3, 3, -1, 1 };
+    kc.class_pair_values = cv2; d.kern_scale = 8;
+    EXPECT(kerning(&d,1,2), -2, "kern -1.5 rounds down"); EXPECT(kerning(&d,1,1), 1, "kern +1.5 rounds down");
+    EXPECT(kerning(&d,2,2), -1, "kern -0.5 rounds down"); EXPECT(kerning(&d,2,1), 0, "kern +0.5 rounds down");
+    /* Rounding helpers: floor_div always rounds down; pen_px rounds 1/16
+     * pixel to the nearest pixel, the same way either side of zero.        */
+    EXPECT(floor_div(7, 2), 3, "floor_div(7, 2)");   EXPECT(floor_div(-7, 2), -4, "floor_div(-7, 2)");
+    EXPECT(floor_div(-8, 2), -4, "floor_div(-8, 2)"); EXPECT(floor_div(-1, 16), -1, "floor_div(-1, 16)");
+    EXPECT(floor_div(0, 16), 0, "floor_div(0, 16)");
+    static const int32_t pen[]  = { 0, 7, 8, 16, -1, -8, -9, -16, -17, -24, -25, -256, -264, -272 };
+    static const int32_t want_px[] = { 0, 0, 1, 1, 0, 0, -1, -1, -1, -1, -2, -16, -16, -17 };
+    for (int i = 0; i < 14; i++) EXPECT(pen_px(pen[i]), want_px[i], "pen_px");
     static const uint8_t ofs8[] = {0,2,1};
     static const uint16_t ul[] = {0,5,9}, ofs16[] = {4,0,7};
     lv_font_fmt_txt_cmap_t cm[2] = {

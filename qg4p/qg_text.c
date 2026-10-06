@@ -63,6 +63,31 @@ static inline int32_t clamp_scale(uint8_t s)
     return (s < 1) ? 1 : (s > 4) ? 4 : s;
 }
 
+/*
+ * DIVIDING NUMBERS THAT CAN BE NEGATIVE
+ *
+ * C's division throws away the fraction, which rounds TOWARD ZERO: 7 / 2 is
+ * 3 (rounded down) but -7 / 2 is -3 (rounded UP). Text positions can be
+ * negative (text starting left of the screen, a word sliding off the edge,
+ * a centred line wider than the screen), and a position must round the same
+ * way on both sides of 0, or text jumps by a pixel as it crosses the edge.
+ * So every division here that can see a negative number uses floor_div(),
+ * which always rounds DOWN, toward minus infinity: floor_div(-7, 2) is -4.
+ * (Shifting right, -7 >> 1, happens to round down with GCC, but C leaves
+ * >> of a negative number up to each compiler, so it isn't used for this.)
+ */
+static inline int32_t floor_div(int32_t a, int32_t b)     /* b must be > 0 */
+{
+    return (a >= 0) ? a / b : -((b - 1 - a) / b);
+}
+
+/* A pen position in 1/16 pixel -> the nearest whole pixel (halves round
+ * up, i.e. to the right). Adding 8 is adding half a pixel.                  */
+static inline int32_t pen_px(int32_t pen16)
+{
+    return floor_div(pen16 + 8, 16);
+}
+
 qg_font_t qg_font_create(const lv_font_t *data, qg_color_t color, uint8_t scale)
 {
     qg_font_t f = { .data = data, .color = color, .scale = (uint8_t)clamp_scale(scale) };
@@ -254,7 +279,7 @@ static int32_t kerning(const lv_font_fmt_txt_dsc_t *d, uint32_t left, uint32_t r
     }
     /* The stored value is scaled by kern_scale/16 (this is how LVGL fonts
      * pack a wide range of adjustments into one signed byte).              */
-    return (value * (int32_t)d->kern_scale) >> 4;
+    return floor_div(value * (int32_t)d->kern_scale, 16);  /* value can be < 0 */
 }
 
 /* ========================================================================== */
@@ -718,7 +743,7 @@ static void layout_line(const ctx_t *c, const char *p, style_t st, int32_t pen16
         if (st_descent(&st) > desc) desc = st_descent(&st);
     }
 
-    ln->width   = (vis16 + 8) / 16 - c->left;
+    ln->width   = pen_px(vis16) - c->left;
     ln->ascent  = asc;
     ln->descent = desc;
 }
@@ -756,7 +781,7 @@ static void draw_line(const ctx_t *c, const line_t *ln, int32_t top, int32_t shi
             pen16 = next_tab16(c, pen16 - shift * 16) + shift * 16;
             prev = 0;
             if (opaque) {                     /* paint the gap as background */
-                int32_t x0 = (pen_before + 8) / 16, x1 = (pen16 + 8) / 16;
+                int32_t x0 = pen_px(pen_before), x1 = pen_px(pen16);
                 qg_int_fill_rect(scr, x0, top, x1 - x0, line_h, scr->text_bg);
             }
             continue;
@@ -774,7 +799,7 @@ static void draw_line(const ctx_t *c, const line_t *ln, int32_t top, int32_t shi
 
         const lv_font_fmt_txt_glyph_dsc_t *g = &d->glyph_dsc[gid];
         int32_t adv16 = (int32_t)g->adv_w * scale;
-        int32_t pen_x = (pen16 + 8) / 16;
+        int32_t pen_x = pen_px(pen16);
         qg_color_t fg = st_color(&st);
 
         /* The glyph box's bottom edge sits ofs_y above the baseline. */
@@ -783,7 +808,7 @@ static void draw_line(const ctx_t *c, const line_t *ln, int32_t top, int32_t shi
         const uint8_t *bmp = &d->glyph_bitmap[g->bitmap_index];
 
         if (opaque) {
-            int32_t cell_w = (pen16 + adv16 + 8) / 16 - pen_x;
+            int32_t cell_w = pen_px(pen16 + adv16) - pen_x;
             glyph_opaque(scr, bmp, g->box_w, g->box_h, gx, gy,
                          pen_x, top, cell_w, line_h, scale, fg, scr->text_bg);
         } else if (g->box_w > 0 && is_color(fg)) {
@@ -855,7 +880,7 @@ static void history_add(qg_screen_t *scr, const line_t *ln, int32_t top, int32_t
     char tag[48];
     const style_t *st = &ln->st_start;
     int n = snprintf(tag, sizeof tag, "{~:%ld,%d,%d,%d,%d,%d}",
-                     (long)((ln->pen16_start + 8) / 16),
+                     (long)pen_px(ln->pen16_start),
                      st->base_color == QG_DEFAULT ? -1 : (int)st->base_color,
                      (int)st->fg, slot_of(scr, st->font), (int)st->mscale, (int)st->mcolor);
     if (n > 0) hist_append(h, tag, (size_t)n);
@@ -947,7 +972,9 @@ static void run_text(const ctx_t *c, int32_t x, int32_t top, const char *text,
         int32_t shift = 0;
         if (c->align != QG_ALIGN_LEFT) {
             int32_t room = c->right - c->left - ln.width;
-            shift = (c->align == QG_ALIGN_CENTER) ? room / 2 : room;
+            /* room is negative when a line is wider than the space (wrap
+             * off): floor_div keeps the odd pixel on the same side.        */
+            shift = (c->align == QG_ALIGN_CENTER) ? floor_div(room, 2) : room;
         }
         if (draw) {
             draw_line(c, &ln, top, shift);
@@ -959,7 +986,7 @@ static void run_text(const ctx_t *c, int32_t x, int32_t top, const char *text,
         if (ln.next == NULL) {
             /* The next character goes where the pen stopped, trailing spaces
              * included ("HP: " leaves the cursor after the space).         */
-            res->end_x  = (ln.pen16_end + 8) / 16 + shift;
+            res->end_x  = pen_px(ln.pen16_end) + shift;
             res->end_y  = top;
             res->last_h = line_h;
             break;
