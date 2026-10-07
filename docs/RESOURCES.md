@@ -46,14 +46,22 @@ Defaults are the dev board's wiring (layout B in [getting started](manual/07-get
 
 ## QS4P (sound), `qs4p/`
 
-In development. Until the library arrives (milestone S1), the bring-up test S0 (`tests/hardware/test_s0.c`) drives the sound hardware directly, with no library:
+In development (QS4P 0.1.0).
 
 | Resource | How it's chosen | Default | Notes |
 |---|---|---|---|
-| PWM: audio | set in `tests/hardware/test_board.h` (`PIN_AUDIO`); the slice follows from the pin | GP2 = slice 1 A | Divider 1, so the counter runs at the full 150 MHz: wrap 255 (8 bits) gives a 586 kHz carrier, wrap 1023 (10 bits) 146 kHz |
-| GPIO: amplifier shutdown | set in `test_board.h` (`PIN_AMP_SD`) | GP3 | A plain output: high = amp on. GP3 is PWM slice 1 B, so while it's the shutdown pin, slice 1 B can't do PWM for anything else; see [known clashes](#known-clashes) |
-| Timer | a repeating timer from the SDK's default alarm pool | | 22,050 callbacks a second, each writing one sample to the PWM. The default alarm pool is the one `sleep_ms()` uses (hardware alarm 3) |
-| DMA, PIO, IRQs of its own | not used | | |
+| PWM: audio | set by config: `qs_pwm_config_t.pin`; the slice and channel follow from the pin | GP2 = slice 1 A | Divider 1, so the counter runs at the full 150 MHz: wrap 255 (`pwm_bits` 8) gives a 586 kHz carrier, wrap 1023 (10 bits) 146 kHz. `qs_init_pwm` starts it at 50% (silence) and it stays running while idle; `qs_deinit` stops it. The DMA writes the whole 32-bit compare register, so the slice's other output can't be used by anything else: see [known clashes](#known-clashes) |
+| GPIO: amplifier shutdown | set by config: `shutdown_pin`, or -1 for none | GP3 | A plain output: high = amp on. Driven low first thing in `qs_init_pwm`, and left driven low by `qs_deinit` (some amp boards pull SD high). GP3 is PWM slice 1 B |
+| DMA channel | claimed at run time (`dma_claim_unused_channel(false)`) | one | Copies 32-bit levels from a buffer to the PWM compare register. `qs_init_pwm` returns `QS_ERR_NO_HARDWARE` if none is free |
+| DMA pacing timer | claimed at run time (`dma_claim_unused_timer(false)`) | one of the four | Paces the DMA at the sample rate: clk_sys x X / Y, with X and Y found at start-up. 22,050 a second is 7 / 47,619, which gives 22,050.022 |
+| IRQ | set in `qs4p/qs_config.h`: DMA interrupt line `QS_DMA_IRQ` | line 1 (`DMA_IRQ_1`) | A shared handler (`irq_add_shared_handler`) that checks and clears only its own channel, so other code can use the line too. Fires once per buffer (86 times a second at 22,050 samples a second and 256-sample buffers), and only while a sound is playing or the amplifier is on: when idle, the DMA is stopped. QG4P uses no DMA interrupt; line 0 is left for the many SDK examples and libraries that default to it |
+| Timers and alarms | none claimed | | `qs_init_pwm` waits 20 ms with `sleep_ms()`, which borrows the SDK's default alarm pool |
+| PIO | not used | | |
+| Core | whichever core calls `qs_init_pwm` | core 0 | The refill runs in that core's DMA interrupt. Call every `qs_` function from that core |
+| RAM: buffers inside the library | set in `qs4p/qs_config.h` | 2.5 KB | Two buffers of `QS_BUFFER_SAMPLES` (256) 32-bit levels, 2 KB, and one 256-sample work buffer, 512 B: in `qs_pwm.c`, so only in programs that call `qs_init_pwm`. The engine's own state is under 100 bytes |
+| Flash | code and constant data only | in the firmware | Never writes or erases flash. A sound pack area is planned: see the [flash plan](#flash-plan) |
+
+Hardware test S0 (`tests/hardware/test_s0.c`) drives the same pins without the library: PWM slice 1 directly, and a repeating timer from the SDK's default alarm pool (22,050 callbacks a second) instead of DMA.
 
 ---
 
@@ -80,8 +88,8 @@ The dev board's wiring, and what's being kept free.
 
 | GP | Used by | For |
 |---|---|---|
-| 2 | sound (test S0; QS4P from S1) | PWM audio (slice 1 A) |
-| 3 | sound (test S0; QS4P from S1) | amplifier shutdown: a plain GPIO, so PWM slice 1 B is taken |
+| 2 | QS4P | PWM audio (slice 1 A) |
+| 3 | QS4P | amplifier shutdown: a plain GPIO, so PWM slice 1 B is taken |
 | 9, 10, 11 | reserved: QS4P | I2S (on the RP2350, I2S is done with PIO) |
 | 15 | QG4P | backlight B (PWM slice 7 B) |
 | 16 | QG4P | backlight A (PWM slice 0 A) |
@@ -97,11 +105,11 @@ The dev board's wiring, and what's being kept free.
 
 **Two pins on one PWM slice share its frequency and wrap.** They dim independently (each output has its own level), but they can't run at different PWM frequencies. Which slice and output a pin drives is fixed by its number: **slice = (GP / 2) mod 8; output A for an even GP, B for an odd one.** So GP2 is slice 1 A, GP3 is 1 B, GP15 is 7 B, GP16 is 0 A, GP26 is 5 A. QG4P sets up a backlight's slice once, at 10 kHz, and knows nothing of other libraries: if sound used the other output of a backlight's slice, whichever set the slice up last would decide the frequency for both. Keep audio PWM on a slice no backlight uses. (On the 48-pin RP2350B, GP32 and up drive extra slices 8 to 11.)
 
-**GP2 (PWM slice 1 A) is reserved for QS4P audio.** The default dev-board wiring, layout B, leaves it free. Layouts A and C in [getting started](manual/07-getting-started.md#layouts-for-two-screens) use GP2 as SCK: choose layout B if sound is planned.
+**GP2 (PWM slice 1 A) is QS4P's audio pin.** The default dev-board wiring, layout B, leaves it free for that. Layouts A and C in [getting started](manual/07-getting-started.md#layouts-for-two-screens) use GP2 as SCK: choose layout B if sound is planned.
 
-**GP9 to GP11 are reserved for QS4P's I2S, and GP3 for the amplifier's shutdown pin.** Layout A uses GP3 (MOSI) and GP9 (backlight B); layout C uses GP3, GP10 and GP11.
+**GP9 to GP11 are reserved for QS4P's I2S, and GP3 is the amplifier's shutdown pin.** Layout A uses GP3 (MOSI) and GP9 (backlight B); layout C uses GP3, GP10 and GP11.
 
-**GP3 takes PWM slice 1 B out of service.** It's the other output of the audio slice (GP2 is 1 A), used as a plain GPIO for the amplifier's shutdown pin. The slice's counter runs at the audio carrier rate, so its B output couldn't dim a backlight anyway: keep backlights and anything else that needs PWM off slice 1.
+**The audio slice is QS4P's alone.** GP3, the slice's other output (1 B), is the amplifier's shutdown pin, a plain GPIO. And even with another pin there, QS4P's DMA writes the slice's whole compare register (both outputs) 22,050 times a second, and the counter runs at the audio carrier rate, so the B output couldn't dim a backlight or do anything else useful. Keep backlights and other PWM off whichever slice the audio pin is on.
 
 **GP26 to GP28 stay free for the ADC** (battery monitoring). They are the only pins that can read a voltage.
 

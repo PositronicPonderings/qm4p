@@ -23,6 +23,7 @@ endif()
 #  Each library folder is self-contained, needing only the Pico SDK:
 #    qg4p/   QuickGraphics 4 Pico   (CMake target qg4p)
 #    qa4p/   QuickAssets 4 Pico     (CMake target qa4p)
+#    qs4p/   QuickSound 4 Pico      (CMake target qs4p, in development)
 #  To USE them in your own project, copy only the folders you use; see the
 #  CMakeLists.txt inside each. This file builds the whole repository.
 #
@@ -44,5 +45,6 @@ pico_sdk_init()
 
 add_subdirectory(qg4p)             # the graphics library: qg4p
 add_subdirectory(qa4p)             # the asset pack library: qa4p
+add_subdirectory(qs4p)             # the sound library: qs4p (in development)
 add_subdirectory(examples)         # examples: qg4p_hello, ...
 add_subdirectory(tests/hardware)   # hardware tests: qg4p_test_m0 ... (graphics), qs4p_test_s0 ... (sound)
