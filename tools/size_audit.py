@@ -5,8 +5,8 @@
 # SPDX-AI-Provider: Anthropic
 """
 size_audit.py - flash and RAM for EVERY program in a build, and which
-programs carry which library files. For keeping QG4P's promise: if a
-program doesn't use a feature, it shouldn't pay for it.
+programs carry which library files. For keeping the libraries' promise: if
+a program doesn't use a feature, it shouldn't pay for it.
 
 EXAMPLES
     python3 tools/size_audit.py build
@@ -18,8 +18,10 @@ WHAT IT DOES
     one per program: <program>.elf.map), reads each exactly as
     tools/size_report.py does, and prints:
 
-      1. every program's flash and RAM, in total and for QG4P alone
-      2. every QG4P library file, and the programs that include it
+      1. every program's flash and RAM in total, and the flash each library
+         (QG4P, QA4P, QS4P) takes in it: a 0 says the program carries
+         none of that library
+      2. every library file, and the programs that include it
 
     The second list is the one for spotting problems. A library file shows up
     in a program only if something in that program needs it, so a file where
@@ -41,7 +43,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from size_report import parse          # the same parser as size_report.py
 
-LIBRARY_GROUPS = ("qg4p", "qa4p")
+LIBRARY_GROUPS = ("qg4p", "qa4p", "qs4p")
 
 
 def find_maps(build_dir):
@@ -97,26 +99,24 @@ def audit(build_dir):
     }
 
 
-def lib_totals(prog):
-    fl = sum(prog["groups"].get(g, {}).get("flash", 0) for g in LIBRARY_GROUPS)
-    ram = sum(prog["groups"].get(g, {}).get("ram", 0) for g in LIBRARY_GROUPS)
-    return fl, ram
+def lib_flash(prog, group):
+    return prog["groups"].get(group, {}).get("flash", 0)
 
 
 def short(name):
-    return name[5:] if name.startswith("qg4p_") else name
+    return name[5:] if name.startswith(("qg4p_", "qs4p_")) else name
 
 
 def print_report(result):
     programs, library = result["programs"], result["library_files"]
     names = sorted(programs)
 
-    print("PROGRAMS                              total              QG4P only")
-    print("%-28s %9s %9s  %9s %9s" % ("", "flash", "RAM", "flash", "RAM"))
+    print("PROGRAMS                              total            flash of each library")
+    print("%-28s %9s %9s  %s" % ("", "flash", "RAM", " ".join("%7s" % g.upper() for g in LIBRARY_GROUPS)))
     for n in names:
         p = programs[n]
-        lf, lr = lib_totals(p)
-        print("%-28s %9d %9d  %9d %9d" % (n, p["total"]["flash"], p["total"]["ram"], lf, lr))
+        libs = " ".join("%7d" % lib_flash(p, g) for g in LIBRARY_GROUPS)
+        print("%-28s %9d %9d  %s" % (n, p["total"]["flash"], p["total"]["ram"], libs))
 
     print("\nLIBRARY FILES, and the programs that include them")
     print("(a file where you don't expect it is worth a look)\n")

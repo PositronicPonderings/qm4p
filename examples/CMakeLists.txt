@@ -46,7 +46,7 @@ qg4p_example(calibrate)                 # 16  colour calibration over USB serial
 qg4p_example(showcase)                  # 17  two screens as one: everything at a glance
 
 # qs4p_example(name): a sound example. It links only the sound library, and
-# takes just the sound settings from board.h (no board.c, no QG4P).
+# takes only the sound settings from board.h (no board.c, no QG4P).
 function(qs4p_example name)
     add_executable(qs4p_${name} ${name}.c)
     target_link_libraries(qs4p_${name} pico_stdlib qs4p)

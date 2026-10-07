@@ -1,5 +1,35 @@
 # Changelog
 
+## QM4P 0.3.0 (2026-10-07)
+
+Sound arrives: QS4P's first milestones, a bring-up test with no library (S0) and the library's core with its first test (S1). Library versions in this release: **QS4P 0.1.0** (sound; new, in development), **QG4P 1.1.1** and **QA4P 1.0.0** (both unchanged). Square waves only for now, which is authentic to 1987 and not yet to anything later.
+
+### Added
+- **QS4P, QuickSound 4 Pico** (`qs4p/`, CMake target `qs4p`, header `qs4p.h`), in development. It needs only the Pico SDK. Sound comes out of one PWM pin (GP2) through a 1 kOhm and capacitor filter into a PAM8302 amplifier, whose shutdown pin is GP3. The API so far:
+
+  | QuickBasic | QS4P |
+  |---|---|
+  | | `qs_init_pwm(&cfg)`, `qs_deinit()` |
+  | `BEEP` | `qs_beep()` |
+  | `SOUND f, d` | `qs_sound(hz, ms, QS_FG)`, or `QS_BG` to return at once; `ms` = 0 stops; `QS_TICKS(d)` turns clock ticks into milliseconds |
+  | | `qs_busy()`, `qs_wait()`, `qs_stop()` (a 5 ms fade, not a cut) |
+  | | `qs_set_volume(percent)`, `qs_get_volume()`, `qs_err_str(err)` |
+
+  How it works: a DMA channel, paced by a DMA timer at the sample rate (22,050 a second), copies samples from two 256-sample buffers to the PWM's compare register; a shared handler on `DMA_IRQ_1` refills each buffer as it finishes. The channel and the timer are claimed at run time, and the DMA stops while nothing plays. The amplifier is switched only in silence: on 20 ms before a sound, off 100 ms after the last. Volume is a percentage of a ceiling set in the config, to protect small speakers. Whole numbers only, from the configuration to the interrupt. About 3 KB of flash and 2.6 KB of RAM, and only in programs that use it. The register of hardware used is in [`docs/RESOURCES.md`](docs/RESOURCES.md#qs4p-sound-qs4p).
+- **Hardware test S0** (`tests/hardware/test_s0.c`, program `qs4p_test_s0`): the amplifier and speaker with no sound library at all. Silence, 1 kHz at 8-bit and 10-bit PWM, a sweep from 100 Hz to 8 kHz, three beeps and four volume steps, to choose the filter capacitor, the PWM resolution and the volume ceiling by ear.
+- **Hardware test S1** (`tests/hardware/test_s1.c`, program `qs4p_test_s1`): QS4P on the same wiring. BEEP three times, a scale in clock ticks, a 4 s tune in the background while both screens draw, `qs_stop()` partway through a tone, the volume steps, and 3 s idle with the amplifier off.
+- **Example `beep.c`** (program `qs4p_beep`): start the sound, BEEP, then a three-note jingle in the background. It links QS4P only.
+- **Sound settings** in `examples/board.h` (`BOARD_AUDIO_PIN`, `BOARD_AMP_SD_PIN`, `BOARD_MAX_VOLUME`) and `tests/hardware/test_board.h` (`PIN_AUDIO`, `PIN_AMP_SD`, `AUDIO_PWM_BITS`, `AUDIO_MAX_VOLUME`). A sound-only example defines `BOARD_NO_GRAPHICS` before including `board.h`, which leaves out everything that needs QG4P. The graphics examples are unchanged.
+- **`run_all.sh --group graphics|sound|all`** (default all: graphics, then sound). The sound group is S0 and S1.
+- **Host tests for QS4P.** `qs_engine` runs the engine and tones against a stand-in backend that records every sample, and checks pitch (within 1%), length (within one buffer), loudness (the peak at 100% is the ceiling's level), `QS_ERR_RANGE`, the fade after `qs_stop()`, `QS_TICKS(18)` = 989, and the amplifier's switching in every test. Each test's sound is written to `tests/host/out/*.wav`, and `golden_sounds` checks their fingerprints. `qs_pwm_backend` runs the PWM backend against a pretend SDK that logs every call: the start-up order, the DMA and interrupt set-up, the levels written and the clean-up. `qs_integer_only` finds no `float`, `double` or decimal point in QS4P's code. Every existing golden fingerprint is unchanged.
+
+### Changed
+- `tests/hardware/test_board.h` no longer includes `qg4p.h`, so S0 builds without QG4P; the tests that use the screens include it themselves.
+- `copy_the_folder` also compiles every `qs4p/` source with only `qs4p/` on the include path. `manual_links` also checks every path a source file names in its comments (`see tests/hardware/test_s0.c`). `ai_disclosure` fails if a library folder is missing from its search.
+- `tools/size_audit.py` shows each program's flash per library (QG4P, QA4P, QS4P) and lists QS4P's files; `tools/size_report.py` lists QA4P's and QS4P's files one by one, as it did QG4P's.
+- `docs/RESOURCES.md`: a QS4P table (PWM slice 1 A on GP2, GP3 as a plain output, so slice 1 B is taken; one DMA channel and one DMA timer, claimed at run time; `DMA_IRQ_1`, shared). GP2 and GP3 are no longer marked planned.
+- The VS Code load task lists `qs4p_beep`, `qs4p_test_s0` and `qs4p_test_s1`.
+
 ## QM4P 0.2.0 (2026-10-06)
 
 A showcase example, pictures for the README, a tidier hardware test suite, and one graphics fix found along the way. Library versions in this release: **QG4P 1.1.1** (a bug fix) and **QA4P 1.0.0** (unchanged).

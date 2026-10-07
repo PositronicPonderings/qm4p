@@ -58,8 +58,8 @@ In development (QS4P 0.1.0).
 | Timers and alarms | none claimed | | `qs_init_pwm` waits 20 ms with `sleep_ms()`, which borrows the SDK's default alarm pool |
 | PIO | not used | | |
 | Core | whichever core calls `qs_init_pwm` | core 0 | The refill runs in that core's DMA interrupt. Call every `qs_` function from that core |
-| RAM: buffers inside the library | set in `qs4p/qs_config.h` | 2.5 KB | Two buffers of `QS_BUFFER_SAMPLES` (256) 32-bit levels, 2 KB, and one 256-sample work buffer, 512 B: in `qs_pwm.c`, so only in programs that call `qs_init_pwm`. The engine's own state is under 100 bytes |
-| Flash | code and constant data only | in the firmware | Never writes or erases flash. A sound pack area is planned: see the [flash plan](#flash-plan) |
+| RAM: buffers inside the library | set in `qs4p/qs_config.h` | 2.6 KB | Two buffers of `QS_BUFFER_SAMPLES` (256) 32-bit levels, 2 KB, and one 256-sample work buffer, 512 B: in `qs_pwm.c`, so only in programs that call `qs_init_pwm`. With the backend's and the engine's own state, 2,645 bytes in `qs4p_beep` |
+| Flash | code and constant data only | in the firmware | About 3 KB of code (2,969 bytes in `qs4p_beep`). Never writes or erases flash. A sound pack area is planned: see the [flash plan](#flash-plan) |
 
 Hardware test S0 (`tests/hardware/test_s0.c`) drives the same pins without the library: PWM slice 1 directly, and a repeating timer from the SDK's default alarm pool (22,050 callbacks a second) instead of DMA.
 

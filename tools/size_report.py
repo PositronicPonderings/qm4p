@@ -114,7 +114,7 @@ def main():
     for (g, f), (fl, ram) in sizes.items():
         groups[g].append((f, fl, ram))
 
-    order = ["qg4p", "assets", "program", "pico-sdk"]
+    order = ["qg4p", "qa4p", "qs4p", "program", "pico-sdk"]
     order += sorted(g for g in groups if g not in order)
     total_fl = total_ram = 0
     print("%-34s %9s %9s" % ("", "flash", "RAM"))
@@ -127,7 +127,7 @@ def main():
         total_fl += gf
         total_ram += gr
         print("%-34s %9d %9d" % (g + ":", gf, gr))
-        if g in ("qg4p", "assets"):
+        if g in ("qg4p", "qa4p", "qs4p"):           # the libraries, file by file
             for f, fl, ram in rows:
                 print("    %-30s %9d %9d" % (f, fl, ram))
     print("%-34s %9d %9d" % ("TOTAL", total_fl, total_ram))
