@@ -16,3 +16,16 @@ void channel_config_set_write_increment(dma_channel_config*, bool);
 void dma_channel_configure(uint, const dma_channel_config*, volatile void*, const volatile void*, uint32_t, bool);
 void dma_channel_wait_for_finish_blocking(uint);
 int dma_claim_unused_channel(bool);
+/* For qs4p (QuickSound) */
+void dma_channel_unclaim(uint);
+int dma_claim_unused_timer(bool);
+void dma_timer_unclaim(uint);
+void dma_timer_set_fraction(uint, uint16_t, uint16_t);
+uint dma_get_timer_dreq(uint);
+void dma_channel_set_read_addr(uint, const volatile void*, bool);
+void dma_channel_set_trans_count(uint, uint32_t, bool);
+void dma_channel_abort(uint);
+void dma_irqn_set_channel_enabled(uint, uint, bool);
+bool dma_irqn_get_channel_status(uint, uint);
+void dma_irqn_acknowledge_channel(uint, uint);
+int dma_get_irq_num(uint);

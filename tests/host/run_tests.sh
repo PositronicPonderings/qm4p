@@ -4,20 +4,23 @@
 # SPDX-AI-Model: claude-opus-5-5
 # SPDX-AI-Provider: Anthropic
 # ---------------------------------------------------------------------------
-#  QM4P host tests: run the libraries (qg4p, qa4p) on a PC, no Pico needed.
+#  QM4P host tests: run the libraries (qg4p, qa4p, qs4p) on a PC, no Pico
+#  needed.
 #
 #  Needs: gcc, python3, Pillow and numpy  (pip install pillow numpy)
 #  Run:   sh tests/host/run_tests.sh      (from anywhere)
 #
 #  The drawing code runs against fake screens that record pixels instead of
-#  sending them over SPI. Tests compare the results with independent
-#  references, with exact expectations, and with "golden" fingerprints of
-#  every page of the hardware test programs.
+#  sending them over SPI, and the sound code against a fake backend that
+#  records samples instead of playing them. Tests compare the results with
+#  independent references, with exact expectations, and with "golden"
+#  fingerprints of every page of the hardware test programs and of every
+#  sound the sound tests make.
 # ---------------------------------------------------------------------------
 cd "$(dirname "$0")" || exit 1
-L=../../qg4p; A=../../qa4p; H=../hardware; B=build
-mkdir -p $B
-CF="-std=c11 -O1 -w -Istubs -I$L -I$A -I$H -DQA_HOST_TEST"
+L=../../qg4p; A=../../qa4p; S=../../qs4p; H=../hardware; B=build
+mkdir -p $B out
+CF="-std=c11 -O1 -w -Istubs -I$L -I$A -I$S -I$H -DQA_HOST_TEST"
 BASE="$L/qg_draw.c $L/qg_draw_pct.c $L/qg_block.c $L/qg_palette.c $L/qg_text.c $L/qg_image.c $L/fonts/qg_font_mono_12.c $L/fonts/qg_font_sans_16.c $L/fonts/qg_font_sans_bold_24.c"
 BUF8="$L/backend/qg_backend_buf8.c"
 pass=0; fail=0
@@ -51,6 +54,8 @@ build render_m6         render_m6.c $BASE $H/test_images.c
 build render_m7         render_m7.c $BASE $A/qa4p.c
 build render_m8         render_m8.c $BASE $BUF8 $H/test_images.c
 build render_new        render_new.c $BASE $BUF8 $H/test_images.c
+build test_qs           test_qs.c $S/qs_engine.c $S/qs_tone.c
+build test_qs_pwm       test_qs_pwm.c $S/qs_engine.c $S/qs_tone.c $S/qs_pwm.c
 
 # The examples run unchanged against stand-in screens (render_example.c),
 # each stopped at a representative moment. STOP = calls to sleep_ms().
@@ -88,7 +93,8 @@ check asset_pack        ./test_assets
 check mkpack_max_size   sh -c 'rm -rf toobig; ! python3 ../../../tools/mkpack.py ../../hardware/pack --out toobig/assets --max-size 4096 && [ ! -e toobig/assets.bin ]'
 check copy_the_folder   sh -c 'for f in $(cd ../'"$L"' && find . -name "*.c"); do gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only -I../stubs -I../'"$L"' ../'"$L"'/$f || exit 1; done &&
                                gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only -I../stubs -I../'"$A"' ../'"$A"'/qa4p.c &&
-                               gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only -DQA_HOST_TEST -I../'"$A"' ../'"$A"'/qa4p.c'
+                               gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only -DQA_HOST_TEST -I../'"$A"' ../'"$A"'/qa4p.c &&
+                               for f in ../'"$S"'/*.c; do gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only -I../stubs -I../'"$S"' $f || exit 1; done'
 check buf8_equivalence  ./test_buf8_a
 check buf8_scroll_image ./test_buf8_b
 check buf8_overlap      ./test_buf8_overlap
@@ -97,6 +103,15 @@ check render_pages      sh -c 'rm -f *.ppm; for r in render_m2 render_m3 render_
 check render_examples   sh -c 'cd ex && rm -f *.ppm && for ex in '"$EX"'; do n=${ex%%:*}; ./r_$n ${ex##*:} $n || exit 1; done && NOPACK=1 ./r_asset_pack 1 asset_pack_nopack && ./r_layout 2 layout_sideways && ./r_dice_roller 75 dice_roller_midroll && ./r_colour_check 2 colour_check_diagnostics && QG_KEYS="b++++++++[[[[" ./r_calibrate 1 calibrate_adjusted &&
                                while read n stop rest; do case $n in ""|"#"*) continue ;; esac; ./r_showcase $stop showcase_$n > showcase_$n.log || exit 1; done < ../../showcase_stills.txt'
 check golden_images     sh -c 'sha256sum -c ../golden.sha256 --quiet'
+# Sound: the engine and tones against a stand-in backend (each test's sound
+# is written to tests/host/out/*.wav), then the PWM backend against a
+# pretend SDK. The sound runs in an interrupt, so QS4P uses whole numbers
+# only: no float or double, and no number with a decimal point, outside
+# comments (gcc -fpreprocessed strips them).
+check qs_engine         sh -c 'rm -f ../out/*.wav && ./test_qs ../out'
+check qs_pwm_backend    ./test_qs_pwm
+check golden_sounds     sh -c 'cd ../out && sha256sum -c ../golden_sounds.sha256 --quiet && [ $(ls *.wav | wc -l) -eq $(wc -l < ../golden_sounds.sha256) ]'
+check qs_integer_only   sh -c 'for f in ../'"$S"'/*.[ch]; do gcc -fpreprocessed -dD -E -P $f || exit 2; done > qs_no_comments.txt && ! grep -nE "\b(float|double)\b|[0-9]\.[0-9]*|\.[0-9]|\b[0-9]+[eE][+-]?[0-9]" qs_no_comments.txt'
 # A finished picture can be right while the program keeps redrawing it, which
 # flickers on a real DIRECT screen. The showcase's dice settle at sleep 746
 # and their scene ends at 811; the closing card runs 812-961 (sleep numbers

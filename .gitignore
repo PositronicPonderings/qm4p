@@ -3,3 +3,4 @@ tests/host/build/
 __pycache__/
 *.pyc
 .vscode/
+tests/host/out/

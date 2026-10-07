@@ -12,6 +12,12 @@ For every Markdown file in docs/ and the READMEs, every relative link
 ([text](path#anchor)) and picture (<img src="...">) must point at a file
 or folder that exists, and every #anchor at a real heading in that file,
 worked out the way GitHub turns headings into anchors. Web links are skipped.
+
+Source files point at other files too, in their comments ("see
+tests/hardware/test_s0.c for the wiring"). Every path like that in a .c, .h,
+.py, .sh or CMakeLists.txt, starting with one of the project's folders,
+must name a file or folder that exists. A path ending in "_" or with NAME
+in it is a pattern, not a file, and is skipped.
 """
 import os
 import re
@@ -21,6 +27,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)|!\[[^\]]*\]\(([^)\s]+)\)|<img[^>]*\ssrc=\"([^\"]+)\"")
 FENCE = re.compile(r"^```.*?^```", re.S | re.M)
+FOLDERS = ("docs", "examples", "tests", "tools", "qg4p", "qa4p", "qs4p")
+SOURCE_PATH = re.compile(r"(?<![\w./-])((?:%s)/[\w./-]*\w)" % "|".join(FOLDERS))
+SKIP_DIRS = ("build", ".git", "__pycache__", "out")
 
 
 def slug(heading):
@@ -45,7 +54,7 @@ def anchors(path, cache={}):
 
 def main():
     files = []
-    for top in ("docs", "examples", "tests"):
+    for top in FOLDERS:
         for root, _d, fs in os.walk(os.path.join(ROOT, top)):
             if "build" in root.split(os.sep):
                 continue
@@ -68,7 +77,23 @@ def main():
             elif anchor and dest.endswith(".md") and anchor not in anchors(dest):
                 problems.append("%s: %s -> no heading '#%s' in %s" % (where, target, anchor, os.path.relpath(dest, ROOT)))
 
-    print("%d links and pictures checked in %d files" % (checked, len(files)))
+    sources = 0
+    for root, dirs, fs in os.walk(ROOT):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        for f in fs:
+            if not (f.endswith((".c", ".h", ".py", ".sh")) or f == "CMakeLists.txt"):
+                continue
+            path = os.path.join(root, f)
+            sources += 1
+            for m in SOURCE_PATH.finditer(open(path, encoding="utf-8").read()):
+                target = m.group(1)
+                if target.endswith("_") or re.search(r"(^|/)NAME\b", target):
+                    continue                          # a pattern, not a file
+                checked += 1
+                if not os.path.exists(os.path.join(ROOT, target)):
+                    problems.append("%s: %s -> no such file" % (os.path.relpath(path, ROOT), target))
+
+    print("%d links, pictures and paths checked in %d documents and %d source files" % (checked, len(files), sources))
     for p in problems:
         print("BROKEN  " + p)
     sys.exit(1 if problems else 0)

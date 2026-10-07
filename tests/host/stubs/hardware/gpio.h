@@ -10,3 +10,4 @@ typedef unsigned int uint;
 #define GPIO_FUNC_SPI 1
 #define GPIO_FUNC_PWM 4
 void gpio_init(uint); void gpio_set_dir(uint,bool); void gpio_put(uint,bool); void gpio_set_function(uint,int);
+#define NUM_BANK0_GPIOS 48
