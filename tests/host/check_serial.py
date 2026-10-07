@@ -32,7 +32,7 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 HW = os.path.join(ROOT, "tests", "hardware")
 LIMIT = 100
-TESTS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "new_commands", "s0"]
+TESTS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "new_commands", "s0", "s1"]
 
 problems = []
 

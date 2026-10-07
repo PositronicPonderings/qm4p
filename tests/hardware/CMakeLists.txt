@@ -58,3 +58,4 @@ qg4p_test(qg4p_test_m8 test_m8.c test_setup.c test_images.c)             # frame
 qg4p_test(qg4p_test_new_commands test_new_commands.c test_setup.c test_images.c)  # VIEW, GET/PUT, styles
 
 qs4p_test(qs4p_test_s0 test_s0.c LIBS hardware_pwm)                     # sound bring-up, no library
+qs4p_test(qs4p_test_s1 test_s1.c test_setup.c LIBS qs4p qg4p)           # BEEP, SOUND, under busy screens

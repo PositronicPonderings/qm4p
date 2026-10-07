@@ -13,11 +13,17 @@
  *
  * The defaults match docs/WIRING.md: a 2.0" ST7789 as screen A and, for
  * the two-screen examples, a 3.5" ST7796S (or 2.8" ILI9341) as screen B.
+ *
+ * The sound examples (qs4p_) use only the sound settings. They define
+ * BOARD_NO_GRAPHICS before including this file, which leaves out everything
+ * that needs QG4P, so they build without it.
  */
 #ifndef BOARD_H
 #define BOARD_H
 
+#ifndef BOARD_NO_GRAPHICS
 #include "qg4p.h"
+#endif
 
 /* ========================================================================== */
 /*  YOUR SETTINGS: edit these                                                 */
@@ -96,6 +102,16 @@
 #define BOARD_A_TEXT_HISTORY  32
 #define BOARD_B_TEXT_HISTORY  0
 
+/* --- Sound: the qs4p_ examples ---
+ * A PAM8302 amplifier, wired as in beep.c (its outputs are bridged: neither
+ * speaker wire goes to GND).                                               */
+#define BOARD_AUDIO_PIN    2         /* PWM audio: GP2 -> 1 kOhm -> amp A+     */
+#define BOARD_AMP_SD_PIN   3         /* amp shutdown (high = on), or -1: none  */
+#define BOARD_MAX_VOLUME   75        /* volume ceiling, %: the loudest clean   */
+                                     /* step of hardware test S0's step 6      */
+
+#ifndef BOARD_NO_GRAPHICS
+
 /* ========================================================================== */
 /*  What the examples get                                                     */
 /* ========================================================================== */
@@ -133,5 +149,7 @@ extern const qg_color_adjust_t board_adjust_a, board_adjust_b;
 
 /** A random number from 0 to n - 1 (good enough for games, not for secrets). */
 uint32_t board_random(uint32_t n);
+
+#endif /* BOARD_NO_GRAPHICS */
 
 #endif /* BOARD_H */

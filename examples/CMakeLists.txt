@@ -3,9 +3,9 @@
 # SPDX-AI-Model: claude-opus-5-5
 # SPDX-AI-Provider: Anthropic
 # ---------------------------------------------------------------------------
-#  Examples: each builds as its own program, build/examples/qg4p_<name>.uf2.
-#  Program names start with the library they show off: qg4p_ for graphics
-#  (sound examples, when QS4P arrives, will be qs4p_).
+#  Examples: each builds as its own program, build/examples/qg4p_<name>.uf2
+#  or qs4p_<name>.uf2. Program names start with the library they show off:
+#  qg4p_ for graphics, qs4p_ for sound.
 #  They share board.c/board.h: set your wiring there once.
 #  ASSETS: the example also uses an asset pack, so it links qa4p.
 # ---------------------------------------------------------------------------
@@ -44,3 +44,16 @@ qg4p_example(dice_roller)               # 14  the game one
 qg4p_example(colour_check)              # 15  colour test pattern
 qg4p_example(calibrate)                 # 16  colour calibration over USB serial
 qg4p_example(showcase)                  # 17  two screens as one: everything at a glance
+
+# qs4p_example(name): a sound example. It links only the sound library, and
+# takes just the sound settings from board.h (no board.c, no QG4P).
+function(qs4p_example name)
+    add_executable(qs4p_${name} ${name}.c)
+    target_link_libraries(qs4p_${name} pico_stdlib qs4p)
+    pico_enable_stdio_usb(qs4p_${name} 1)
+    pico_enable_stdio_uart(qs4p_${name} 0)
+    target_compile_definitions(qs4p_${name} PRIVATE PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=2000)
+    pico_add_extra_outputs(qs4p_${name})
+endfunction()
+
+qs4p_example(beep)                      #  1  BEEP, and a jingle in the background

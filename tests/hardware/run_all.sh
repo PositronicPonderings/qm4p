@@ -36,7 +36,7 @@
 #  non-zero if anything failed or was skipped.
 # ---------------------------------------------------------------------------
 GRAPHICS="m0 m1 m2 m3 m4 m5 m6 m7 m8 new_commands"
-SOUND="s0"
+SOUND="s0 s1"
 PACK=0; FROM=""; BUILD=""; GROUP=all
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -128,6 +128,12 @@ about() {
         echo "4/6 Sweep: 100 Hz to 8 kHz over 4 s -- look for where it goes quiet, buzzy or rattly"
         echo "5/6 Beep: 800 Hz square, 250 ms, three times -- look for three crisp beeps, QB's BEEP"
         echo "6/6 Volume: 1 kHz at 25, 50, 75, 100%, 1 s each -- look for the loudest step with no rattle" ;;
+    s1) echo "1/6 BEEP: qs_beep() three times, 1/4 s apart -- look for three crisp beeps, no pops"
+        echo "2/6 Scale: C major up and down, SOUND f, 4 each -- look for even notes, no clicks"
+        echo "3/6 Background: a 4 s tune while both screens draw -- look for no crackle or stutter"
+        echo "4/6 Stop: a 5 s tone, qs_stop() after 1.5 s -- look for a quick fade, no click"
+        echo "5/6 Volume: 1 kHz at 25, 50, 75, 100% of ceiling -- look for four steps up, no rattle"
+        echo "6/6 Idle: 3 s with nothing playing, the amp off -- look for silence: not even hiss" ;;
     esac
 }
 
@@ -147,7 +153,8 @@ for t in $TESTS; do
     echo "  Steps (the serial lines say the same, as each one starts):"
     about $t | sed 's/^/    /'
     [ $t = m7 ] && [ $PACK = 0 ] && echo "  (Reminder: M7 needs its pack loaded first: --pack, or see test_m7.c.)"
-    [ $t = s0 ] && echo "  (Sound: the amp and speaker wired as in test_s0.c. The amp's outputs are bridged: neither speaker wire goes to GND.)"
+    case $t in s[0-9]*) echo "  (Sound: the amp and speaker wired as in test_s0.c. The amp's outputs are bridged: neither speaker wire goes to GND.)" ;; esac
+    [ $t = s1 ] && echo "  (Reminder: S1 plays with S0's answers: AUDIO_PWM_BITS and AUDIO_MAX_VOLUME in test_board.h, then rebuild.)"
     answer=r
     while [ $answer = r ]; do
         picotool load -f -x "$HW/$p.uf2" || echo "  picotool couldn't load it. Stuck? Hold BOOTSEL, replug, [r]eload."
