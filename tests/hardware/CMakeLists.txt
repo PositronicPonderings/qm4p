@@ -6,22 +6,17 @@
 #  Hardware test programs, one per development milestone.
 #
 #  Every program here builds as its own target, so a single build produces
-#  all of them: build/tests/hardware/qg4p_test_m0.uf2 ... qg4p_test_m8.uf2. To try a
-#  different one, flash a different .uf2; no CMake editing needed.
+#  all of them: build/tests/hardware/qg4p_test_m0.uf2 ... qg4p_test_m8.uf2
+#  for graphics, qs4p_test_s0.uf2 onward for sound. To try a different one,
+#  flash a different .uf2; no CMake editing needed.
 #
 #  Wiring, board choice and panel settings: test_board.h (and docs/WIRING.md).
 #  Serial output: one tagged line per step, in the format of test_log.h.
 #  To flash and check every one in turn: sh tests/hardware/run_all.sh
 # ---------------------------------------------------------------------------
 
-# qg4p_test(name source... [ASSETS]): one test program.
-function(qg4p_test name)
-    cmake_parse_arguments(T "ASSETS" "" "" ${ARGN})
-    add_executable(${name} ${T_UNPARSED_ARGUMENTS})
-    target_link_libraries(${name} pico_stdlib qg4p)
-    if (T_ASSETS)
-        target_link_libraries(${name} qa4p)   # the asset pack library
-    endif()
+# The settings every test program shares.
+function(test_program_common name)
     pico_enable_stdio_usb(${name} 1)          # printf() goes to USB serial
     pico_enable_stdio_uart(${name} 0)
     # At start-up, stdio_init_all() waits until a terminal connects, but no
@@ -29,6 +24,26 @@ function(qg4p_test name)
     # and with none the program still starts.
     target_compile_definitions(${name} PRIVATE PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=2000)
     pico_add_extra_outputs(${name})           # makes the .uf2
+endfunction()
+
+# qg4p_test(name source... [ASSETS]): one graphics test program.
+function(qg4p_test name)
+    cmake_parse_arguments(T "ASSETS" "" "" ${ARGN})
+    add_executable(${name} ${T_UNPARSED_ARGUMENTS})
+    target_link_libraries(${name} pico_stdlib qg4p)
+    if (T_ASSETS)
+        target_link_libraries(${name} qa4p)   # the asset pack library
+    endif()
+    test_program_common(${name})
+endfunction()
+
+# qs4p_test(name source... LIBS library...): one sound test program. It links
+# only what LIBS names, so S0 can test the hardware with no sound library.
+function(qs4p_test name)
+    cmake_parse_arguments(T "" "" "LIBS" ${ARGN})
+    add_executable(${name} ${T_UNPARSED_ARGUMENTS})
+    target_link_libraries(${name} pico_stdlib ${T_LIBS})
+    test_program_common(${name})
 endfunction()
 
 qg4p_test(qg4p_test_m0 test_m0.c)                                        # one ST7789
@@ -41,3 +56,5 @@ qg4p_test(qg4p_test_m6 test_m6.c test_setup.c test_images.c)             # image
 qg4p_test(qg4p_test_m7 test_m7.c test_setup.c ASSETS)                    # asset pack
 qg4p_test(qg4p_test_m8 test_m8.c test_setup.c test_images.c)             # framebuffer
 qg4p_test(qg4p_test_new_commands test_new_commands.c test_setup.c test_images.c)  # VIEW, GET/PUT, styles
+
+qs4p_test(qs4p_test_s0 test_s0.c LIBS hardware_pwm)                     # sound bring-up, no library

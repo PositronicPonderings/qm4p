@@ -11,7 +11,8 @@ run_all.sh says what they say.
     python3 tests/host/check_serial.py --show    also print every step line
 
 The format is set by tests/hardware/test_log.h. For each test program
-(tests/hardware/test_m0.c ... test_m8.c, test_new_commands.c) this checks:
+(tests/hardware/test_m0.c ... test_m8.c, test_new_commands.c, and the
+sound tests test_s0.c onward) this checks:
 
   - it defines TEST_TAG and prints only through the test_log.h macros (a
     bare printf("\\n") for a blank line is the one exception);
@@ -31,7 +32,7 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 HW = os.path.join(ROOT, "tests", "hardware")
 LIMIT = 100
-TESTS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "new_commands"]
+TESTS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "new_commands", "s0"]
 
 problems = []
 

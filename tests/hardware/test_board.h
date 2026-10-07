@@ -7,9 +7,10 @@
  * @brief   The hardware test programs' wiring and panel settings, in one place.
  *
  * Every hardware test reads its numbers from here: the pins, the SPI
- * speeds, and each screen's panel settings. test_setup.c (used by M2
- * onward) builds both screens from them, and test_m0.c and test_m1.c, which
- * spell out the setup step by step on purpose, use the same numbers. Change
+ * speeds, each screen's panel settings, and the sound settings.
+ * test_setup.c (used by M2 onward) builds both screens from them, and
+ * test_m0.c and test_m1.c, which spell out the setup step by step on
+ * purpose, use the same numbers; so do the sound tests, S0 and S1. Change
  * something here and every test follows.
  *
  * (The examples have their own settings file, examples/board.h, so they
@@ -22,7 +23,9 @@
 #ifndef TEST_BOARD_H
 #define TEST_BOARD_H
 
-#include "qg4p.h"
+/* No #include "qg4p.h" here, on purpose: the sound tests use this file too,
+ * and S0 doesn't link QG4P at all. The driver names below (QG_DRIVER_...)
+ * are only words until a file that includes qg4p.h uses them.             */
 
 /* ========================================================================== */
 /*  Which board is screen B?                                                  */
@@ -99,5 +102,19 @@
 #else
   #error "SCREEN_B_BOARD must be SCREEN_B_ILI9341 or SCREEN_B_ST7796"
 #endif
+
+/* ========================================================================== */
+/*  Sound (tests S0 and S1)                                                   */
+/* ========================================================================== */
+/* A PAM8302 class-D amplifier board: GP2 -> 1 kOhm -> amp A+, a capacitor
+ * from A+ to GND (10 to 22 nF), amp A- to GND, VIN to VSYS, and a 1 W 8 Ohm
+ * speaker on the two output terminals. THE OUTPUTS ARE BRIDGED: neither
+ * speaker terminal may be connected to ground.                             */
+#define PIN_AUDIO          2   /* PWM audio out (slice 1 A)       -> 1k -> A+ */
+#define PIN_AMP_SD         3   /* amp shutdown: high = on, low = off -> SD    */
+
+/* Settled by ear with S0; S1 uses them.                                     */
+#define AUDIO_PWM_BITS     8   /* 8 (586 kHz carrier) or 10 (146 kHz): S0 step 3 */
+#define AUDIO_MAX_VOLUME  75   /* volume ceiling in %: S0 step 6's loudest clean */
 
 #endif /* TEST_BOARD_H */

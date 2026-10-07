@@ -44,6 +44,17 @@ Defaults are the dev board's wiring (layout B in [getting started](manual/07-get
 | SPI, DMA, PWM, PIO, IRQs, timers | not used | | |
 | Core | whichever core calls it | | Lookups only read flash and the handle |
 
+## QS4P (sound), `qs4p/`
+
+In development. Until the library arrives (milestone S1), the bring-up test S0 (`tests/hardware/test_s0.c`) drives the sound hardware directly, with no library:
+
+| Resource | How it's chosen | Default | Notes |
+|---|---|---|---|
+| PWM: audio | set in `tests/hardware/test_board.h` (`PIN_AUDIO`); the slice follows from the pin | GP2 = slice 1 A | Divider 1, so the counter runs at the full 150 MHz: wrap 255 (8 bits) gives a 586 kHz carrier, wrap 1023 (10 bits) 146 kHz |
+| GPIO: amplifier shutdown | set in `test_board.h` (`PIN_AMP_SD`) | GP3 | A plain output: high = amp on. GP3 is PWM slice 1 B, so while it's the shutdown pin, slice 1 B can't do PWM for anything else; see [known clashes](#known-clashes) |
+| Timer | a repeating timer from the SDK's default alarm pool | | 22,050 callbacks a second, each writing one sample to the PWM. The default alarm pool is the one `sleep_ms()` uses (hardware alarm 3) |
+| DMA, PIO, IRQs of its own | not used | | |
+
 ---
 
 ## Flash plan
@@ -69,8 +80,8 @@ The dev board's wiring, and what's being kept free.
 
 | GP | Used by | For |
 |---|---|---|
-| 2 | reserved: QS4P | PWM audio (slice 1 A) |
-| 3 | reserved: QS4P | amplifier shutdown |
+| 2 | sound (test S0; QS4P from S1) | PWM audio (slice 1 A) |
+| 3 | sound (test S0; QS4P from S1) | amplifier shutdown: a plain GPIO, so PWM slice 1 B is taken |
 | 9, 10, 11 | reserved: QS4P | I2S (on the RP2350, I2S is done with PIO) |
 | 15 | QG4P | backlight B (PWM slice 7 B) |
 | 16 | QG4P | backlight A (PWM slice 0 A) |
@@ -89,6 +100,8 @@ The dev board's wiring, and what's being kept free.
 **GP2 (PWM slice 1 A) is reserved for QS4P audio.** The default dev-board wiring, layout B, leaves it free. Layouts A and C in [getting started](manual/07-getting-started.md#layouts-for-two-screens) use GP2 as SCK: choose layout B if sound is planned.
 
 **GP9 to GP11 are reserved for QS4P's I2S, and GP3 for the amplifier's shutdown pin.** Layout A uses GP3 (MOSI) and GP9 (backlight B); layout C uses GP3, GP10 and GP11.
+
+**GP3 takes PWM slice 1 B out of service.** It's the other output of the audio slice (GP2 is 1 A), used as a plain GPIO for the amplifier's shutdown pin. The slice's counter runs at the audio carrier rate, so its B output couldn't dim a backlight anyway: keep backlights and anything else that needs PWM off slice 1.
 
 **GP26 to GP28 stay free for the ADC** (battery monitoring). They are the only pins that can read a voltage.
 

@@ -6,11 +6,15 @@
 # ---------------------------------------------------------------------------
 #  run_all.sh - flash every hardware test in turn, and ask what you saw.
 #
-#  Run:   sh tests/hardware/run_all.sh [--pack] [--from m4] [build-dir]
+#  Run:   sh tests/hardware/run_all.sh [--group G] [--pack] [--from m4] [build-dir]
 #
+#    --group G    which tests: graphics (m0 ... m8, new_commands, the
+#                 qg4p_test_ programs), sound (s0, s1, the qs4p_test_
+#                 programs; needs the amplifier and speaker), or all
+#                 (the default: graphics, then sound)
 #    --pack       first load the asset pack qg4p_test_m7 needs, made beforehand by
 #                 python3 tools/mkpack.py tests/hardware/pack --out build/assets
-#    --from NAME  start part-way through: m0 ... m8, new_commands
+#    --from NAME  start part-way through the chosen group, e.g. m4 or s1
 #    build-dir    where the build put the programs (default: build)
 #
 #  Needs picotool on the PATH, a finished build, and the Pico plugged in.
@@ -31,21 +35,33 @@
 #  At the end, a table of passes, fails and skips; the exit status is
 #  non-zero if anything failed or was skipped.
 # ---------------------------------------------------------------------------
-TESTS="m0 m1 m2 m3 m4 m5 m6 m7 m8 new_commands"
-PACK=0; FROM=""; BUILD=""
+GRAPHICS="m0 m1 m2 m3 m4 m5 m6 m7 m8 new_commands"
+SOUND="s0"
+PACK=0; FROM=""; BUILD=""; GROUP=all
 while [ $# -gt 0 ]; do
     case "$1" in
+        --group) [ $# -gt 1 ] || { echo "--group needs graphics, sound or all"; exit 2; }; shift; GROUP="$1" ;;
         --pack) PACK=1 ;;
         --from) [ $# -gt 1 ] || { echo "--from needs a test name"; exit 2; }; shift; FROM="$1" ;;
-        -h|--help) sed -n '7,32p' "$0"; exit 0 ;;
+        -h|--help) sed -n '7,36p' "$0"; exit 0 ;;
         -*) echo "Unknown option: $1 (try --help)"; exit 2 ;;
         *) BUILD="$1" ;;
     esac
     shift
 done
+case "$GROUP" in
+    graphics) TESTS="$GRAPHICS" ;;
+    sound)    TESTS="$SOUND" ;;
+    all)      TESTS="$GRAPHICS $SOUND" ;;
+    *) echo "--group: '$GROUP' isn't graphics, sound or all"; exit 2 ;;
+esac
 [ -n "$BUILD" ] || BUILD="$(dirname "$0")/../../build"
 HW="$BUILD/tests/hardware"
 PACKFILE="$BUILD/assets.bin"
+
+# Each test's program: qs4p_test_ for sound (s0, s1 ...), qg4p_test_ for
+# graphics.
+prog() { case $1 in s[0-9]*) echo "qs4p_test_$1" ;; *) echo "qg4p_test_$1" ;; esac; }
 
 # --from: keep the list from that test on.
 if [ -n "$FROM" ]; then
@@ -57,7 +73,7 @@ fi
 missing=""
 command -v picotool > /dev/null 2>&1 ||
     missing="$missing\n  picotool, on the PATH (the Pico VS Code extension keeps one in ~/.pico-sdk/picotool/)"
-for t in $TESTS; do [ -f "$HW/qg4p_test_$t.uf2" ] || missing="$missing\n  $HW/qg4p_test_$t.uf2  (build first)"; done
+for t in $TESTS; do [ -f "$HW/$(prog $t).uf2" ] || missing="$missing\n  $HW/$(prog $t).uf2  (build first)"; done
 [ $PACK = 0 ] || [ -f "$PACKFILE" ] ||
     missing="$missing\n  $PACKFILE  (python3 tools/mkpack.py tests/hardware/pack --out $BUILD/assets)"
 [ -z "$missing" ] || { printf 'Missing, so nothing was flashed:%b\n' "$missing"; exit 1; }
@@ -106,6 +122,12 @@ about() {
                   echo "2/4 Styles: styled lines and boxes on A -- look for even dashes, thin and thick"
                   echo "3/4 GET/PUT: a sprite on B, slid with XOR -- look for the background intact behind it"
                   echo "4/4 PRESET: a dotted line erased on A -- look for every dot gone; POS/CSRLIN shown" ;;
+    s0) echo "1/6 Silence: amp on, PWM at 50%, 2 s -- look for no whine (carrier); a little hiss is fine"
+        echo "2/6 8-bit: 1 kHz sine, 586 kHz carrier, 2 s -- look for a clean, steady tone"
+        echo "3/6 10-bit: 1 kHz sine, 146 kHz carrier, 2 s -- look for which was cleaner, step 2 or 3?"
+        echo "4/6 Sweep: 100 Hz to 8 kHz over 4 s -- look for where it goes quiet, buzzy or rattly"
+        echo "5/6 Beep: 800 Hz square, 250 ms, three times -- look for three crisp beeps, QB's BEEP"
+        echo "6/6 Volume: 1 kHz at 25, 50, 75, 100%, 1 s each -- look for the loudest step with no rattle" ;;
     esac
 }
 
@@ -118,15 +140,17 @@ fi
 # --- Each test in turn -------------------------------------------------------
 pass=0; fail=0; skip=0; quit=0; table=""
 for t in $TESTS; do
-    if [ $quit = 1 ]; then table="$table\n  qg4p_test_$t\tskipped"; skip=$((skip + 1)); continue; fi
+    p=$(prog $t)
+    if [ $quit = 1 ]; then table="$table\n  $p\tskipped"; skip=$((skip + 1)); continue; fi
     echo
-    echo "=== qg4p_test_$t ==="
+    echo "=== $p ==="
     echo "  Steps (the serial lines say the same, as each one starts):"
     about $t | sed 's/^/    /'
     [ $t = m7 ] && [ $PACK = 0 ] && echo "  (Reminder: M7 needs its pack loaded first: --pack, or see test_m7.c.)"
+    [ $t = s0 ] && echo "  (Sound: the amp and speaker wired as in test_s0.c. The amp's outputs are bridged: neither speaker wire goes to GND.)"
     answer=r
     while [ $answer = r ]; do
-        picotool load -f -x "$HW/qg4p_test_$t.uf2" || echo "  picotool couldn't load it. Stuck? Hold BOOTSEL, replug, [r]eload."
+        picotool load -f -x "$HW/$p.uf2" || echo "  picotool couldn't load it. Stuck? Hold BOOTSEL, replug, [r]eload."
         answer=""
         while [ -z "$answer" ]; do
             printf 'Pass? [Y]es / [n]o / [r]eload / [q]uit: '
@@ -138,9 +162,9 @@ for t in $TESTS; do
         done
     done
     case $answer in
-        y) table="$table\n  qg4p_test_$t\tPASS"; pass=$((pass + 1)) ;;
-        n) table="$table\n  qg4p_test_$t\tFAIL"; fail=$((fail + 1)) ;;
-        q) table="$table\n  qg4p_test_$t\tskipped"; skip=$((skip + 1)); quit=1 ;;
+        y) table="$table\n  $p\tPASS"; pass=$((pass + 1)) ;;
+        n) table="$table\n  $p\tFAIL"; fail=$((fail + 1)) ;;
+        q) table="$table\n  $p\tskipped"; skip=$((skip + 1)); quit=1 ;;
     esac
 done
 
