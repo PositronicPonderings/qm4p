@@ -106,15 +106,16 @@
 /* ========================================================================== */
 /*  Sound (tests S0 and S1)                                                   */
 /* ========================================================================== */
-/* A PAM8302 class-D amplifier board: GP2 -> 1 kOhm -> amp A+, a capacitor
- * from A+ to GND (10 to 22 nF), amp A- to GND, VIN to VSYS, and a 1 W 8 Ohm
- * speaker on the two output terminals. THE OUTPUTS ARE BRIDGED: neither
- * speaker terminal may be connected to ground.                             */
-#define PIN_AUDIO          2   /* PWM audio out (slice 1 A)       -> 1k -> A+ */
+/* A PAM8302 class-D amplifier board: GP2 -> 4.7 kOhm -> amp A+, 1 kOhm and
+ * a capacitor (10 to 22 nF) from A+ to GND, amp A- to GND, VIN to VSYS, and
+ * a 1 W 8 Ohm speaker on the two output terminals (test_s0.c explains the
+ * two resistors). THE OUTPUTS ARE BRIDGED: neither speaker terminal may be
+ * connected to ground.                                                     */
+#define PIN_AUDIO          2   /* PWM audio out (slice 1 A)    -> 4.7k -> A+ */
 #define PIN_AMP_SD         3   /* amp shutdown: high = on, low = off -> SD    */
 
 /* Settled by ear with S0; S1 uses them.                                     */
 #define AUDIO_PWM_BITS     8   /* 8 (586 kHz carrier) or 10 (146 kHz): S0 step 3 */
-#define AUDIO_MAX_VOLUME  75   /* volume ceiling in %: S0 step 6's loudest clean */
+#define AUDIO_MAX_VOLUME  60   /* volume ceiling in %: S0 step 6's loudest clean */
 
 #endif /* TEST_BOARD_H */

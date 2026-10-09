@@ -44,12 +44,14 @@
 /**
  * Volume ceiling in percent, when the config says 0. Full volume
  * (qs_set_volume(100)) plays at this fraction of the loudest the hardware can
- * do. A 1 W speaker on a class-D amp running from 5 V can be asked for more
- * than it can take; 75% amplitude is about 56% of the power. Hardware test S0
- * finds the loudest level your speaker takes cleanly.
+ * do. Wired as in tests/hardware/test_s0.c, full scale from the Pico is about
+ * the most the amplifier can take, and a square wave there puts up to about
+ * 2.7 W into an 8 Ohm speaker: too much for a 1 W one. Power goes with the
+ * square of the amplitude, so 60% amplitude is 36% of the power, about 1 W.
+ * Hardware test S0 finds the loudest level your speaker takes cleanly.
  */
 #ifndef QS_DEFAULT_MAX_VOLUME
-#define QS_DEFAULT_MAX_VOLUME 75
+#define QS_DEFAULT_MAX_VOLUME 60
 #endif
 
 /**

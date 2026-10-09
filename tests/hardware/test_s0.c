@@ -20,8 +20,9 @@
  *   | Part                       | Connection                                 |
  *   |----------------------------|--------------------------------------------|
  *   | PAM8302 mono class-D amp   | VIN -> VSYS (pin 39), GND -> GND (pin 38)  |
- *   | Audio signal               | GP2 (pin 4) -> 1 kOhm -> amp A+;           |
- *   |                            | capacitor from A+ to GND (10 to 22 nF);    |
+ *   | Audio signal               | GP2 (pin 4) -> 4.7 kOhm -> amp A+;         |
+ *   |                            | 1 kOhm from A+ to GND, and a capacitor     |
+ *   |                            | from A+ to GND (10 to 22 nF);              |
  *   |                            | amp A- -> GND                              |
  *   | Amp shutdown               | GP3 (pin 5) -> amp SD. High = on, low = off|
  *   | Speaker                    | 1 W, 8 Ohm, on the amp's two output        |
@@ -36,16 +37,28 @@
  *   GP2 switches between 0 V and 3.3 V hundreds of thousands of times a
  *   second (the "carrier"). The fraction of each cycle it spends high is the
  *   sample: half high is silence, more is "push the speaker out", less is
- *   "pull it in". The 1 kOhm resistor and the capacitor are a low-pass
- *   filter that smooths the switching into the wave the amplifier hears.
+ *   "pull it in". The resistors and the capacitor are a low-pass filter
+ *   that smooths the switching into the wave the amplifier hears.
+ *
+ * WHY TWO RESISTORS
+ *   The amplifier multiplies its input by about 16 (24 dB) and runs from
+ *   about 5 V, so it reaches its limit with an input of about 0.6 V from
+ *   peak to peak. GP2 swings 3.3 V. Fed through a single resistor, the amp
+ *   clipped (flattened the wave against its limits) at anything above about
+ *   a fifth of full scale: louder steps sounded hardly any louder, the sound
+ *   turned gravelly, and the current it drew dimmed the screens. The first
+ *   version of this test found that out the loud way. The 4.7 kOhm and
+ *   1 kOhm resistors divide the swing by 5.7, to about 0.58 V, so full scale
+ *   on the Pico is about the most the amp can take.
  *
  * CHANGING THE CAPACITOR
- *   The filter's corner is 1 / (2 x pi x R x C): 10 nF gives about 16 kHz,
- *   22 nF about 7 kHz. A bigger capacitor removes more of the carrier (less
- *   whine and hiss) and also more of the top end (duller high notes and a
- *   quieter top of the sweep). Unplug the Pico first, swap the capacitor
- *   between A+ and GND, and run this test again; the steps are made for
- *   comparing.
+ *   The filter's corner is 1 / (2 x pi x R x C), where R is the two
+ *   resistors as the capacitor sees them: in parallel, 825 Ohm. 10 nF gives
+ *   about 19 kHz, 22 nF about 9 kHz. A bigger capacitor removes more of the
+ *   carrier (less whine and hiss) and also more of the top end (duller high
+ *   notes and a quieter top of the sweep). Unplug the Pico first, swap the
+ *   capacitor between A+ and GND, and run this test again; the steps are
+ *   made for comparing.
  *
  * WHAT TO LISTEN FOR, STEP BY STEP (then the steps repeat)
  *   The amplifier is switched on and off around every step with the
@@ -53,17 +66,27 @@
  *   1  Silence   the amp on for 2 s with the PWM at 50%: silence. Hiss is
  *                normal for a cheap amp at a low level; a high whine means
  *                the carrier is leaking through (try the bigger capacitor).
- *   2  8-bit     a 1 kHz sine for 2 s, PWM wrap 255: a 586 kHz carrier.
+ *   2  8-bit     a 1 kHz sine at half scale for 2 s, PWM wrap 255: a
+ *                586 kHz carrier.
  *   3  10-bit    the same at wrap 1023: a 146 kHz carrier. Finer steps, but
  *                the carrier is closer to hearing range. Which was cleaner?
- *   4  Sweep     100 Hz to 8 kHz over 4 s, at SWEEP_BITS (below). Note
- *                where it goes quiet (the filter), buzzy, or rattly (the
- *                speaker).
- *   5  Beep      an 800 Hz square wave for 250 ms, three times: QuickBasic's
- *                BEEP.
- *   6  Volume    1 kHz at 25%, 50%, 75% and 100% of full scale, 1 s each.
- *                The loudest step with no distortion or rattle becomes the
- *                library's volume ceiling (AUDIO_MAX_VOLUME in test_board.h).
+ *                (At half scale the amp is well inside its limits, so only
+ *                the PWM is being judged.)
+ *   4  Sweep     100 Hz to 8 kHz over 4 s at half scale, at SWEEP_BITS
+ *                (below). Note where it goes quiet (the filter), buzzy, or
+ *                rattly (the speaker).
+ *   5  Beep      an 800 Hz square wave at half scale for 250 ms, three
+ *                times: QuickBasic's BEEP.
+ *   6  Volume    a 1 kHz square wave, the wave QS4P plays, at 25%, 35%, 50%,
+ *                70% and 100% of full scale, 1 s each. Each step has about
+ *                twice the power of the one before (3 dB), so each should
+ *                sound clearly louder. Where one doesn't, the amp has reached
+ *                its limit; where one rattles or buzzes, the speaker has. The
+ *                loudest step before either becomes the library's volume
+ *                ceiling (AUDIO_MAX_VOLUME in test_board.h). A square wave at
+ *                full scale puts up to about 2.7 W into 8 Ohm, and about 1 W
+ *                at 60%: the top steps take a 1 W speaker past its rating for
+ *                a second at a time, which is how the test finds the limit.
  *
  * POP AVOIDANCE
  *   On:  SD low, start the PWM at 50% (silence), wait 20 ms for the filter
@@ -201,22 +224,22 @@ int main(void)
         amp_off();
         sleep_ms(500);
 
-        TEST_STEP(2, 6, "8-bit", "1 kHz sine, 586 kHz carrier, 2 s", "a clean, steady tone");
+        TEST_STEP(2, 6, "8-bit", "1 kHz sine at 50%, 586 kHz carrier", "a clean, steady tone");
         amp_on(8);
-        play(SINE, 1000, 100, 2000);
+        play(SINE, 1000, 50, 2000);
         amp_off();
         sleep_ms(500);
 
-        TEST_STEP(3, 6, "10-bit", "1 kHz sine, 146 kHz carrier, 2 s", "which was cleaner, step 2 or 3?");
+        TEST_STEP(3, 6, "10-bit", "1 kHz sine at 50%, 146 kHz carrier", "which was cleaner, step 2 or 3?");
         amp_on(10);
-        play(SINE, 1000, 100, 2000);
+        play(SINE, 1000, 50, 2000);
         amp_off();
         sleep_ms(500);
 
-        TEST_STEP(4, 6, "Sweep", "100 Hz to 8 kHz over 4 s", "where it goes quiet, buzzy or rattly");
+        TEST_STEP(4, 6, "Sweep", "100 Hz to 8 kHz at 50% over 4 s", "where it goes quiet, buzzy or rattly");
         amp_on(SWEEP_BITS);
         wave = SINE;
-        amplitude = 32767;
+        amplitude = 32767 / 2;
         for (int ms = 0; ms <= 4000; ms++) {       /* even steps on a log scale */
             set_tone((uint32_t)(100.0f * powf(80.0f, (float)ms / 4000.0f)));
             sleep_ms(1);
@@ -225,20 +248,21 @@ int main(void)
         amp_off();
         sleep_ms(500);
 
-        TEST_STEP(5, 6, "Beep", "800 Hz square, 250 ms, three times", "three crisp beeps, QB's BEEP");
+        TEST_STEP(5, 6, "Beep", "800 Hz square at 50%, 250 ms, three times", "three crisp beeps, QB's BEEP");
         amp_on(SWEEP_BITS);
         for (int k = 0; k < 3; k++) {
-            play(SQUARE, 800, 100, 250);
+            play(SQUARE, 800, 50, 250);
             sleep_ms(250);
         }
         amp_off();
         sleep_ms(500);
 
-        TEST_STEP(6, 6, "Volume", "1 kHz at 25, 50, 75, 100%, 1 s each", "the loudest step with no rattle");
+        TEST_STEP(6, 6, "Volume", "1 kHz square at 25, 35, 50, 70, 100%", "where it stops getting louder");
         amp_on(SWEEP_BITS);
-        for (int percent = 25; percent <= 100; percent += 25) {
-            TEST_DETAIL("%d%%", percent);
-            play(SINE, 1000, percent, 1000);
+        static const int steps[] = { 25, 35, 50, 70, 100 };     /* 3 dB apart */
+        for (int k = 0; k < 5; k++) {
+            TEST_DETAIL("%d%%", steps[k]);
+            play(SQUARE, 1000, steps[k], 1000);
             sleep_ms(300);
         }
         amp_off();

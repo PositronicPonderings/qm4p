@@ -286,15 +286,16 @@ static void test_play(void)
           count("gpio_put 3 1"), count("gpio_put 3 0"));
     CHECK(at("gpio_put 3 0") > at("gpio_put 3 1"), "the amp went off before it went on");
 
-    /* The levels: silence is 128, the tone 128 +- 95 (75% ceiling). */
+    /* The levels: silence is 128, the tone either side of it, as far as the
+     * default ceiling allows (60%: 19660, so 204 and 51).                  */
+    const int32_t peak = 32767 * QS_DEFAULT_MAX_VOLUME / 100;
+    const uint32_t top = (uint32_t)(peak + 32768) >> 8, bottom = (uint32_t)(-peak + 32768) >> 8;
     uint32_t silent = 0, high = 0, low = 0, other = 0;
     for (uint32_t i = 0; i < words_n; i++) {
-        switch (words[i]) {
-        case 128: silent++; break;
-        case 223: high++;   break;           /* (+24575 + 32768) >> 8 */
-        case 32:  low++;    break;           /* (-24575 + 32768) >> 8 */
-        default:  other++;  break;
-        }
+        if (words[i] == 128)         silent++;
+        else if (words[i] == top)    high++;
+        else if (words[i] == bottom) low++;
+        else                         other++;
     }
     CHECK(other == 0, "%u levels that are neither silence nor the tone", other);
     CHECK(high + low == 200u * 22050u / 1000u, "%u samples of tone, wanted %u", high + low, 200u * 22050u / 1000u);

@@ -123,11 +123,11 @@ about() {
                   echo "3/4 GET/PUT: a sprite on B, slid with XOR -- look for the background intact behind it"
                   echo "4/4 PRESET: a dotted line erased on A -- look for every dot gone; POS/CSRLIN shown" ;;
     s0) echo "1/6 Silence: amp on, PWM at 50%, 2 s -- look for no whine (carrier); a little hiss is fine"
-        echo "2/6 8-bit: 1 kHz sine, 586 kHz carrier, 2 s -- look for a clean, steady tone"
-        echo "3/6 10-bit: 1 kHz sine, 146 kHz carrier, 2 s -- look for which was cleaner, step 2 or 3?"
-        echo "4/6 Sweep: 100 Hz to 8 kHz over 4 s -- look for where it goes quiet, buzzy or rattly"
-        echo "5/6 Beep: 800 Hz square, 250 ms, three times -- look for three crisp beeps, QB's BEEP"
-        echo "6/6 Volume: 1 kHz at 25, 50, 75, 100%, 1 s each -- look for the loudest step with no rattle" ;;
+        echo "2/6 8-bit: 1 kHz sine at 50%, 586 kHz carrier -- look for a clean, steady tone"
+        echo "3/6 10-bit: 1 kHz sine at 50%, 146 kHz carrier -- look for which was cleaner, step 2 or 3?"
+        echo "4/6 Sweep: 100 Hz to 8 kHz at 50% over 4 s -- look for where it goes quiet, buzzy or rattly"
+        echo "5/6 Beep: 800 Hz square at 50%, 250 ms, three times -- look for three crisp beeps, QB's BEEP"
+        echo "6/6 Volume: 1 kHz square at 25, 35, 50, 70, 100% -- look for where it stops getting louder" ;;
     s1) echo "1/6 BEEP: qs_beep() three times, 1/4 s apart -- look for three crisp beeps, no pops"
         echo "2/6 Scale: C major up and down, SOUND f, 4 each -- look for even notes, no clicks"
         echo "3/6 Background: a 4 s tune while both screens draw -- look for no crackle or stutter"

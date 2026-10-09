@@ -105,9 +105,9 @@
 /* --- Sound: the qs4p_ examples ---
  * A PAM8302 amplifier, wired as in beep.c (its outputs are bridged: neither
  * speaker wire goes to GND).                                               */
-#define BOARD_AUDIO_PIN    2         /* PWM audio: GP2 -> 1 kOhm -> amp A+     */
+#define BOARD_AUDIO_PIN    2         /* PWM audio: GP2 -> 4.7 kOhm -> amp A+   */
 #define BOARD_AMP_SD_PIN   3         /* amp shutdown (high = on), or -1: none  */
-#define BOARD_MAX_VOLUME   75        /* volume ceiling, %: the loudest clean   */
+#define BOARD_MAX_VOLUME   60        /* volume ceiling, %: the loudest clean   */
                                      /* step of hardware test S0's step 6      */
 
 #ifndef BOARD_NO_GRAPHICS

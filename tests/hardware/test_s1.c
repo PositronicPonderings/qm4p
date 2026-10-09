@@ -19,8 +19,9 @@
  *   | Part                       | Connection                                 |
  *   |----------------------------|--------------------------------------------|
  *   | PAM8302 mono class-D amp   | VIN -> VSYS (pin 39), GND -> GND (pin 38)  |
- *   | Audio signal               | GP2 (pin 4) -> 1 kOhm -> amp A+;           |
- *   |                            | capacitor from A+ to GND (10 to 22 nF);    |
+ *   | Audio signal               | GP2 (pin 4) -> 4.7 kOhm -> amp A+;         |
+ *   |                            | 1 kOhm from A+ to GND, and a capacitor     |
+ *   |                            | from A+ to GND (10 to 22 nF);              |
  *   |                            | amp A- -> GND                              |
  *   | Amp shutdown               | GP3 (pin 5) -> amp SD. High = on, low = off|
  *   | Speaker                    | 1 W, 8 Ohm, on the amp's two output        |
@@ -53,10 +54,9 @@
  *                  time between frames, not the sound.)
  *   4  Stop        a 5 s tone, stopped by qs_stop() after 1.5 s: a quick
  *                  fade, no click.
- *   5  Volume      1 kHz at 25, 50, 75 and 100% of the ceiling. Four steps
- *                  up. S0 chose the ceiling with a sine wave; this is a
- *                  square wave, which carries more power at the same peak,
- *                  so if 100% rattles here, lower AUDIO_MAX_VOLUME.
+ *   5  Volume      1 kHz at 25, 50, 75 and 100% of the ceiling: four steps
+ *                  up, the last as loud as S0's step 6 said was clean. If it
+ *                  rattles here, lower AUDIO_MAX_VOLUME.
  *   6  Idle        3 s with nothing playing: the amp is off, so not even
  *                  hiss (compare S0's step 1).
  *

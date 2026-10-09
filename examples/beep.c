@@ -14,8 +14,9 @@
  *   | Part                       | Connection                                 |
  *   |----------------------------|--------------------------------------------|
  *   | PAM8302 mono class-D amp   | VIN -> VSYS (pin 39), GND -> GND (pin 38)  |
- *   | Audio signal               | GP2 (pin 4) -> 1 kOhm -> amp A+;           |
- *   |                            | capacitor from A+ to GND (10 to 22 nF);    |
+ *   | Audio signal               | GP2 (pin 4) -> 4.7 kOhm -> amp A+;         |
+ *   |                            | 1 kOhm from A+ to GND, and a capacitor     |
+ *   |                            | from A+ to GND (10 to 22 nF);              |
  *   |                            | amp A- -> GND                              |
  *   | Amp shutdown               | GP3 (pin 5) -> amp SD. High = on, low = off|
  *   | Speaker                    | 1 W, 8 Ohm, on the amp's two output        |
