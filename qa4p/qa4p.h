@@ -14,7 +14,7 @@
  * ---------------------------------------------------------------------------
  *  THE IDEA
  * ---------------------------------------------------------------------------
- *  Images, sounds and game data live in "packs", built on the PC by
+ *  Images, text and game data live in "packs", built on the PC by
  *  tools/mkpack.py and loaded onto the Pico separately from the firmware.
  *  Each pack sits in its own area of flash, at an offset you choose:
  *
