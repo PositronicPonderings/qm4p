@@ -53,13 +53,12 @@ Flash appears in memory from `0x10000000`. A Pico 2 has 4 MB.
 | Area | Offset | Address | Size | Status |
 |---|---|---|---|---|
 | Firmware | 0 | `0x10000000` | up to 1 MB | in use |
-| Graphics pack | `0x100000` (1 MB) | `0x10100000` | up to 1.5 MB | in use: `QA_DEFAULT_OFFSET`, the examples' and tests' packs |
-| Sound pack | `0x280000` (2.5 MB) | `0x10280000` | up to 1.5 MB | planned (QS4P) |
+| Graphics pack | `0x100000` (1 MB) | `0x10100000` | up to 3 MB | in use: `QA_DEFAULT_OFFSET`, the examples' and tests' packs |
 | End of flash | `0x400000` (4 MB) | `0x10400000` | | |
 
 - `qa_open` catches a firmware that has grown into a pack, and a pack that runs off the end of flash. **Packs overlapping each other are up to you:** `mkpack.py` prints the flash range each pack occupies, so compare them.
 - Loading a pack erases whole 4 KB sectors, so a pack really claims everything up to the end of its last sector; `mkpack.py` prints that too.
-- `mkpack.py`'s default `--max-size` runs to the end of flash. With a sound pack planned, build the graphics pack with `--max-size 0x180000` (1.5 MB) so it's refused before it grows into the sound area.
+- `mkpack.py`'s default `--max-size` runs to the end of flash. To keep a pack out of another pack's area, give it a smaller `--max-size`.
 
 ---
 
@@ -69,9 +68,6 @@ The dev board's wiring, and what's being kept free.
 
 | GP | Used by | For |
 |---|---|---|
-| 2 | reserved: QS4P | PWM audio (slice 1 A) |
-| 3 | reserved: QS4P | amplifier shutdown |
-| 9, 10, 11 | reserved: QS4P | I2S (on the RP2350, I2S is done with PIO) |
 | 15 | QG4P | backlight B (PWM slice 7 B) |
 | 16 | QG4P | backlight A (PWM slice 0 A) |
 | 17 | QG4P | CS, screen A |
@@ -84,11 +80,7 @@ The dev board's wiring, and what's being kept free.
 
 ## Known clashes
 
-**Two pins on one PWM slice share its frequency and wrap.** They dim independently (each output has its own level), but they can't run at different PWM frequencies. Which slice and output a pin drives is fixed by its number: **slice = (GP / 2) mod 8; output A for an even GP, B for an odd one.** So GP2 is slice 1 A, GP3 is 1 B, GP15 is 7 B, GP16 is 0 A, GP26 is 5 A. QG4P sets up a backlight's slice once, at 10 kHz, and knows nothing of other libraries: if sound used the other output of a backlight's slice, whichever set the slice up last would decide the frequency for both. Keep audio PWM on a slice no backlight uses. (On the 48-pin RP2350B, GP32 and up drive extra slices 8 to 11.)
-
-**GP2 (PWM slice 1 A) is reserved for QS4P audio.** The default dev-board wiring, layout B, leaves it free. Layouts A and C in [getting started](manual/07-getting-started.md#layouts-for-two-screens) use GP2 as SCK: choose layout B if sound is planned.
-
-**GP9 to GP11 are reserved for QS4P's I2S, and GP3 for the amplifier's shutdown pin.** Layout A uses GP3 (MOSI) and GP9 (backlight B); layout C uses GP3, GP10 and GP11.
+**Two pins on one PWM slice share its frequency and wrap.** They dim independently (each output has its own level), but they can't run at different PWM frequencies. Which slice and output a pin drives is fixed by its number: **slice = (GP / 2) mod 8; output A for an even GP, B for an odd one.** So GP15 is slice 7 B, GP16 is 0 A, GP26 is 5 A. QG4P sets up a backlight's slice once, at 10 kHz, and knows nothing of other code: if your own code uses PWM on the other output of a backlight's slice, whichever set the slice up last decides the frequency for both. Keep your own PWM on a slice no backlight uses. (On the 48-pin RP2350B, GP32 and up drive extra slices 8 to 11.)
 
 **GP26 to GP28 stay free for the ADC** (battery monitoring). They are the only pins that can read a voltage.
 

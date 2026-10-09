@@ -49,7 +49,7 @@ Find your question; follow the link. (Just want every function on one page? [Too
 | show an image? scaled? fitted into a box? | [`qg_image_open`](reference/images.md#qg_image_open), [`qg_image_draw`](reference/images.md#qg_image_draw), [`_scaled`](reference/images.md#qg_image_draw_scaled), [`_fit`](reference/images.md#qg_image_draw_fit) |
 | float one image over another? | give the top one a see-through background (`img2bmp8.py` does it from a PNG's transparency) and open it with `QG_IMAGE_TRANSPARENT`: [`qg_image_open`](reference/images.md#qg_image_open) |
 | keep images and text out of my program, and change them without rebuilding? | the [asset pack](reference/assets.md): [`mkpack.py`](05-tools.md#mkpackpy), the [asset pack example](03-examples.md#7-asset-pack) |
-| use more than one asset pack (pictures and sound, say)? | one `qa_pack_t` per pack, each at its own offset: [two packs at once](reference/assets.md#two-packs-at-once) |
+| use more than one asset pack (artwork and game data, say)? | one `qa_pack_t` per pack, each at its own offset: [two packs at once](reference/assets.md#two-packs-at-once) |
 
 ## Animation
 

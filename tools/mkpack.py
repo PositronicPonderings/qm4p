@@ -48,7 +48,7 @@ WHERE THE PACK GOES
     the same offset:  qa_open(&pack, 0x100000)  (QA_DEFAULT_OFFSET).
 
     A program can use several packs, each built separately with its own
-    --offset, e.g. graphics at 0x100000 and sound at 0x280000. They must not
+    --offset, e.g. artwork at 0x100000 and game data at 0x280000. They must not
     overlap: the summary printed at the end gives the flash range each pack
     occupies, so you can check. (docs/RESOURCES.md has the QM4P flash plan.)
 

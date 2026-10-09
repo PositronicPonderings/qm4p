@@ -377,7 +377,7 @@ static void scene_title(int frame)
             /* qg_print_box aligns inside a column, here 6 pixels in from
              * each edge; {f:2} is the small mono font. */
             qg_print_box(s, 6, (int16_t)(h - 24), (int16_t)(panels[i].w - 12),
-                         "{f:2}{c:LIGHTGRAY}QM4P 0.2.0", QG_ALIGN_LEFT);
+                         "{f:2}{c:LIGHTGRAY}QM4P 0.2.1", QG_ALIGN_LEFT);
             qg_print_box(s, 6, (int16_t)(h - 24), (int16_t)(panels[i].w - 12),
                          "{f:2}{c:LIGHTGRAY}MIT-0", QG_ALIGN_RIGHT);
             break;
@@ -756,7 +756,7 @@ static void scene_closing(int frame)
     if (frame == 0) {
         both_cls(QG_BLACK);
         qg_screen_t *l = panels[0].s, *r = panels[1].s;
-        int16_t y = (int16_t)(panels[0].h * 16 / 100);
+        int16_t y = (int16_t)(panels[0].h * 20 / 100);
         qg_print_align(l, y, "{f:1}{s:2}{c:YELLOW}QM4P", QG_ALIGN_CENTER);
         y = (int16_t)(y + 2 * qg_font_line_height(&font_title));
         qg_print_align(l, y, "QuickMedia 4 Pico", QG_ALIGN_CENTER);
@@ -764,8 +764,6 @@ static void scene_closing(int frame)
         qg_print_align(l, y, "{c:LIGHTGREEN}QG4P{c:}  QuickGraphics", QG_ALIGN_CENTER);
         y = (int16_t)(y + qg_font_line_height(&font_body) + 4);
         qg_print_align(l, y, "{c:LIGHTGREEN}QA4P{c:}  QuickAssets", QG_ALIGN_CENTER);
-        y = (int16_t)(y + qg_font_line_height(&font_body) + 4);
-        qg_print_align(l, y, "{c:DARKGRAY}QS4P  QuickSound, planned", QG_ALIGN_CENTER);
 
         /* The address in the body font if it fits the right screen's width,
          * otherwise in the small one: measure first, then print.         */

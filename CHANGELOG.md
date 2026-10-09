@@ -1,5 +1,14 @@
 # Changelog
 
+## QM4P 0.2.1 (2026-10-09)
+
+QM4P no longer plans a sound library. Library versions in this release: **QG4P 1.1.1** and **QA4P 1.0.0** (both unchanged).
+
+### Removed
+- The plans for a sound library (QS4P).
+- The pins and flash reserved for it. GP2, GP3 and GP9 to GP11 are free, and so is the flash from 2.5 MB: the graphics pack may now run to the end of flash.
+- The matching line on the showcase's closing card, and the mentions in the documentation and comments.
+
 ## QM4P 0.2.0 (2026-10-06)
 
 A showcase example, pictures for the README, a tidier hardware test suite, and one graphics fix found along the way. Library versions in this release: **QG4P 1.1.1** (a bug fix) and **QA4P 1.0.0** (unchanged).
