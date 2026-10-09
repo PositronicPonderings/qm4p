@@ -76,8 +76,8 @@ int main(void){
   CHECK(qa_open_at(&one,p1)==QA_OK && qa_open_at(&two,p2)==QA_OK, "two different packs open at the same time");
   CHECK(qa_count(&one)==3 && qa_count(&two)==2 && qa_size(&one)==(uint32_t)n1 && qa_size(&two)==(uint32_t)n2, "  ...each with its own count and size");
   CHECK(qa_find(&one,"hello.txt",&a)==QA_OK && a.data>=p1 && a.data<p1+n1, "  a file found in pack one, inside pack one");
-  CHECK(qa_find(&two,"sound/beep.raw",&a)==QA_OK && a.type==QA_TYPE_SOUND && a.data>=p2 && a.data<p2+n2, "  a file found in pack two, inside pack two");
-  CHECK(qa_find(&two,"hello.txt",&a)==QA_ERR_NOT_FOUND && qa_find(&one,"sound/beep.raw",&a)==QA_ERR_NOT_FOUND, "  a name only in one pack isn't found in the other");
+  CHECK(qa_find(&two,"data/blob.raw",&a)==QA_OK && a.type==QA_TYPE_SOUND && a.data>=p2 && a.data<p2+n2, "  a file found in pack two, inside pack two");
+  CHECK(qa_find(&two,"hello.txt",&a)==QA_ERR_NOT_FOUND && qa_find(&one,"data/blob.raw",&a)==QA_ERR_NOT_FOUND, "  a name only in one pack isn't found in the other");
   CHECK(strcmp(text_of(&one,"shared.txt"),"one\n")==0 && strcmp(text_of(&two,"shared.txt"),"two\n")==0, "  the same name in both: each pack gives its own file");
   CHECK(qa_verify(&one)==QA_OK && qa_verify(&two)==QA_OK, "  both pass their checksums");
 

@@ -7,8 +7,8 @@
  * @brief   QA4P - QuickAssets 4 Pico: read-only asset packs in flash; find
  *          files by name.
  *
- * LAYER:   Assets (a library of its own; it knows nothing about graphics
- *          or sound, and they know nothing about it)
+ * LAYER:   Assets (a library of its own; it knows nothing about graphics,
+ *          and QG4P knows nothing about it)
  * DEPENDS: pico-sdk (for the flash address and size); nothing else
  *
  * ---------------------------------------------------------------------------
@@ -25,7 +25,7 @@
  *                  |  first pack: graphics  |   e.g. art.uf2 from mkpack.py
  *                  |  (here, up to 1.5 MB)  |
  *      0x10280000  +------------------------+  offset 0x280000
- *                  |  second pack: sound    |   e.g. sound.uf2 from mkpack.py
+ *                  |  second pack: data     |   e.g. game.uf2 from mkpack.py
  *                  |  (here, up to 1.5 MB)  |
  *      0x10400000  +------------------------+  end of a 4 MB flash (Pico 2)
  *
@@ -45,7 +45,7 @@
  * ---------------------------------------------------------------------------
  *  The library keeps nothing of its own. Each open pack is a small
  *  qa_pack_t (12 bytes) that YOUR program owns, so several packs can be
- *  open at once: one for graphics, one for sound, one per game level...
+ *  open at once: one for artwork, one for game data, one per game level...
  *  Every function takes the pack to look in.
  *
  *  A qa_pack_t that hasn't been opened must start as all zeros. Declaring it

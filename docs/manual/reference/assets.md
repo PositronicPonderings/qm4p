@@ -195,7 +195,7 @@ qa_open_at(&level, my_level_pack);
 
 ## Two packs at once
 
-Each open pack is its own `qa_pack_t`, so a program can keep several: one for pictures and one for sound, say, or one per game level. Every lookup says which pack to look in, and each pack has only its own files.
+Each open pack is its own `qa_pack_t`, so a program can keep several: one for artwork and one for game data, say, or one per game level. Every lookup says which pack to look in, and each pack has only its own files.
 
 ```c example=qa_two_packs pack
 static qa_pack_t art, game;
@@ -237,4 +237,4 @@ python3 tools/mkpack.py game --out build/game --offset 0x280000   # 2.5 MB
 picotool load build/game.bin -o 0x10280000
 ```
 
-**Notes:** packs must not overlap. `qa_open` checks each pack against your program and the end of flash, but it can't know about your other packs: that part is up to you. `mkpack.py` prints the flash range each pack takes, so you can check, and [`docs/RESOURCES.md`](../../RESOURCES.md#flash-plan) has the plan the QM4P libraries follow (pictures from 1 MB, sound from 2.5 MB).
+**Notes:** packs must not overlap. `qa_open` checks each pack against your program and the end of flash, but it can't know about your other packs: that part is up to you. `mkpack.py` prints the flash range each pack takes, so you can check, and [`docs/RESOURCES.md`](../../RESOURCES.md#flash-plan) has the plan the QM4P libraries follow (pictures from 1 MB).

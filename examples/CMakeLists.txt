@@ -4,8 +4,7 @@
 # SPDX-AI-Provider: Anthropic
 # ---------------------------------------------------------------------------
 #  Examples: each builds as its own program, build/examples/qg4p_<name>.uf2.
-#  Program names start with the library they show off: qg4p_ for graphics
-#  (sound examples, when QS4P arrives, will be qs4p_).
+#  Program names start with the library they show off: qg4p_ for graphics.
 #  They share board.c/board.h: set your wiring there once.
 #  ASSETS: the example also uses an asset pack, so it links qa4p.
 # ---------------------------------------------------------------------------

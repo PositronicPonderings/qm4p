@@ -1,6 +1,6 @@
 # QM4P: QuickMedia 4 Pico
 
-Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphics, asset packs and, soon, sound, each with a friendly API. Every library lives in its own folder and needs only the Pico SDK, never another library, so a project copies in just the folders it uses and carries nothing else. They share one style (simple calls, plain-English comments, "pay only for what you use") and one [register of the hardware each uses](docs/RESOURCES.md), so they can run side by side on one chip.
+Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphics and asset packs, each with a friendly API. Every library lives in its own folder and needs only the Pico SDK, never another library, so a project copies in just the folders it uses and carries nothing else. They share one style (simple calls, plain-English comments, "pay only for what you use") and one [register of the hardware each uses](docs/RESOURCES.md), so they can run side by side on one chip.
 
 ![The showcase on a 2.0-inch and a 3.5-inch screen side by side: a red ball bounces across both screens, passing behind the gap between them, then a coloured message scrolls from the right-hand screen to the left](docs/img/showcase.gif)
 
@@ -8,7 +8,6 @@ Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphi
 |---|---|---|---|
 | **QG4P**, QuickGraphics 4 Pico | `qg4p/` | Graphics on small SPI screens: `CLS`, `PSET`, `LINE`, `CIRCLE`, `PAINT`, `LOCATE`, `PRINT`, fonts, images, flicker-free framebuffers | your project draws on a screen |
 | **QA4P**, QuickAssets 4 Pico | `qa4p/` | Asset packs: images, text, sounds and data, built on the PC and found by name in flash; several packs open at once | you want files kept out of your program, to change them without rebuilding it |
-| **QS4P**, QuickSound 4 Pico | | Sound | *planned* |
 
 > **Too busy to read a manual?** [Everything on one page](docs/manual/quick-reference.md).
 >
@@ -101,7 +100,7 @@ Flashes each hardware test in turn with `picotool`, says what to look for, and a
 
 ## Hardware resources
 
-[`docs/RESOURCES.md`](docs/RESOURCES.md) lists every pin, SPI block, DMA channel, PWM slice and area of flash each library uses, the pins kept free for what's planned, the flash plan for asset packs, and the clashes to avoid.
+[`docs/RESOURCES.md`](docs/RESOURCES.md) lists every pin, SPI block, DMA channel, PWM slice and area of flash each library uses, the pins kept free, the flash plan for asset packs, and the clashes to avoid.
 
 ## Published by
 
