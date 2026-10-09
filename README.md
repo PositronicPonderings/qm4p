@@ -7,7 +7,7 @@ Small libraries for the Raspberry Pi Pico 2, in the spirit of QuickBasic: graphi
 | Library | Folder | What it is | Copy it when |
 |---|---|---|---|
 | **QG4P**, QuickGraphics 4 Pico | `qg4p/` | Graphics on small SPI screens: `CLS`, `PSET`, `LINE`, `CIRCLE`, `PAINT`, `LOCATE`, `PRINT`, fonts, images, flicker-free framebuffers | your project draws on a screen |
-| **QA4P**, QuickAssets 4 Pico | `qa4p/` | Asset packs: images, text, sounds and data, built on the PC and found by name in flash; several packs open at once | you want files kept out of your program, to change them without rebuilding it |
+| **QA4P**, QuickAssets 4 Pico | `qa4p/` | Asset packs: images, text and data, built on the PC and found by name in flash; several packs open at once | you want files kept out of your program, to change them without rebuilding it |
 
 > **Too busy to read a manual?** [Everything on one page](docs/manual/quick-reference.md).
 >

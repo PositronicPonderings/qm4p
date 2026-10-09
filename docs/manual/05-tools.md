@@ -69,7 +69,7 @@ python3 tools/mkpack.py my_assets --out build/assets
 Makes `build/assets.uf2` (drag it onto the Pico in BOOTSEL mode) and `build/assets.bin` (for `picotool load build/assets.bin -o 0x10100000`).
 
 - **PNG, JPG and GIF** files are converted to `.bmp` on the way in (so `icons/star.png` becomes `icons/star.bmp`), with transparency detected automatically.
-- **Everything else** is stored as it is: text, sounds, game data.
+- **Everything else** is stored as it is: text, game data and so on.
 - Names keep their folders, with `/` between them; up to 35 characters. Files starting with `.` are skipped.
 
 | Option | Meaning |

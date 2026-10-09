@@ -27,7 +27,7 @@ WHAT GOES IN
       .bmp                   stored as-is; flagged TRANSPARENT if it was made
                              by img2bmp8.py with transparency (palette entry
                              255 is magenta), or if pack.txt says so
-      anything else          stored as-is (sounds, text, game data...)
+      anything else          stored as-is (text, game data...)
 
     Files starting with "." and the file pack.txt itself are skipped.
     Names can be up to 35 characters.
